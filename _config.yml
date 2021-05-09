@@ -1,0 +1,204 @@
+remote_theme           : "mmistakes/minimal-mistakes"
+minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
+
+# Site Settings
+locale                   : "en-US"
+title                    : "Nikita Ryanov"
+title_separator          : "-"
+subtitle                 : # ""
+name                     : "Nikita Ryanov"
+description              : # ""
+url                      : "https://nryanov.com"
+baseurl                  : # "/"
+repository               : "nryanov/nryanov.github.io"
+teaser                   : # "/assets/images/500x300.png"
+logo                     : # "/assets/images/88x88.png"
+masthead_title           : # ""
+breadcrumbs              : false
+
+words_per_minute         : 200
+
+comments:
+  provider               : # false (default), "disqus"
+  disqus:
+    shortname            : # https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-
+
+search                   : true
+search_full_content      : false
+search_provider          : "lunr"
+
+# SEO Related
+google_site_verification :
+bing_site_verification   :
+yandex_site_verification : 6fffed0224165306
+naver_site_verification  :
+
+# Social Sharing
+twitter:
+  username               : "nryanov"
+social:
+  type                   : # Person or Organization (defaults to Person)
+  name                   : "nryanov"
+  links:
+    - https://twitter.com/nryanov
+    - https://github.com/nryanov
+    - https://linkedin.com/in/nryanov
+
+# Site Author
+author:
+  name             : "Nikita Ryanov"
+  avatar           : "/assets/images/avatar.png"
+  bio              : # ""
+  location         : "Moscow, Russia"
+  email            :
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:ryanov.nikita@gmail.com"
+    - label: "LinkedIn"
+      icon: "fas fa-fw fa-link"
+      url: "https://linkedin.com/in/nryanov"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/nryanov"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/nryanov"
+
+# Site Footer
+footer:
+  links:
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:ryanov.nikita@gmail.com"
+    - label: "LinkedIn"
+      icon: "fas fa-fw fa-link"
+      url: "https://linkedin.com/in/nryanov"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/nryanov"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/nryanov"
+
+
+# Reading Files
+include:
+  - .htaccess
+  - _pages
+exclude:
+  - "*.sublime-project"
+  - "*.sublime-workspace"
+  - vendor
+  - .asset-cache
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - assets/js/plugins
+  - assets/js/_main.js
+  - assets/js/vendor
+  - Capfile
+  - CHANGELOG
+  - config
+  - Gemfile
+  - Gruntfile.js
+  - gulpfile.js
+  - LICENSE
+  - log
+  - node_modules
+  - package.json
+  - package-lock.json
+  - Rakefile
+  - README
+  - tmp
+  - /docs # ignore Minimal Mistakes /docs
+  - /test # ignore Minimal Mistakes /test
+keep_files:
+  - .git
+  - .svn
+encoding: "utf-8"
+markdown_ext: "markdown,mkdown,mkdn,mkd,md"
+
+
+# Conversion
+markdown: kramdown
+highlighter: rouge
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
+
+
+# Markdown Processing
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
+
+
+# Sass/SCSS
+sass:
+  sass_dir: _sass
+  style: compressed # https://sass-lang.com/documentation/file.SASS_REFERENCE.html#output_style
+
+
+# Outputting
+permalink: /:categories/:title/
+paginate: 10
+paginate_path: /page:num/
+timezone: # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+
+
+# Plugins (previously gems:)
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jekyll-include-cache
+
+# mimic GitHub Pages with --safe
+whitelist:
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-feed
+  - jekyll-include-cache
+
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/
+compress_html:
+  clippings: all
+  ignore:
+    envs: development
+
+
+# Defaults
+defaults:
+  # _posts
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profile: true
+      show_date: true
+      read_time: true
+      comments: # true
+      share: true
+      related: true
+  # _pages
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
