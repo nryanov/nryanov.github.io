@@ -8,3 +8,5 @@ vendor
 .bundle
 Gemfile.lock
 **/vendor/bundle
+
+**/.DS_Store
