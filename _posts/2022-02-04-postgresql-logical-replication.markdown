@@ -55,7 +55,7 @@ Update pg_hba.conf (for localhost configuration):
 pg_ctl -D /tmp/postgresql/db1 -o "-p 5432" -l /tmp/postgresql/db1/logs start
 ```
 
-```postgresql
+```sql
 -- with explicit unique index (primary key)
 CREATE TABLE t1
 (
@@ -103,7 +103,7 @@ postgresql.conf:
 pg_ctl -D /tmp/postgresql/db2 -o "-p 5433" -l /tmp/postgresql/db2/logs start
 ```
 
-```postgresql
+```sql
 CREATE SUBSCRIPTION sample_async_subscription
     CONNECTION 'dbname=postgres host=localhost user=replication_user port=5432 application_name=logical_replication_sample'
     PUBLICATION sample_publication;
@@ -153,7 +153,7 @@ pg_ctl -D /tmp/postgresql/db1 -o "-p 5432" -l /tmp/postgresql/db1/logs start
 ```
 
 After initial setup we will create a table and publication:
-```postgresql
+```sql
 CREATE TABLE t1
 (
     id    int PRIMARY KEY,
@@ -188,7 +188,7 @@ postgresql.conf:
 pg_ctl -D /tmp/postgresql/db2 -o "-p 5433" -l /tmp/postgresql/db2/logs start
 ```
 
-```postgresql
+```sql
 CREATE TABLE t1
 (
     id    int PRIMARY KEY,
@@ -204,7 +204,7 @@ Note that in connection we use explicit application name: `application_name=repl
 By default publication name will be used as replica's name for synchronous mode. 
 
 ## Sync mode <a name="sync-mode"></a>
-```postgresql
+```sql
 -- master
 SELECT application_name, sync_state FROM pg_stat_replication;
 -- [replica_1, async]
@@ -214,7 +214,7 @@ Initially, as we didn't specify standby names in `postgresql.conf` this publicat
 - **synchronous_standby_names** = `'replica_1'`
 
 Now reload config (no need for restart) and check state of replication:
-```postgresql
+```sql
 -- master
 SELECT pg_reload_conf(); -- reload config
 SELECT application_name, sync_state FROM pg_stat_replication;
@@ -233,7 +233,7 @@ pg_ctl -D /tmp/postgresql/db2 -o "-p 5433" -l /tmp/postgresql/db2/logs stop
 ```
 
 And try to insert something new on master:
-```postgresql
+```sql
 -- master
 INSERT INTO t1 VALUES (12, 'value_12');
 ```
@@ -247,7 +247,7 @@ pg_ctl -D /tmp/postgresql/db2 -o "-p 5433" -l /tmp/postgresql/db2/logs start
 As replica doesn't need to be a read-only, it is possible to modify replicated table. Some modification may cause a conflicts in future
 if master will have transaction which, for example, insert a row with already existing PK on replicated table:
 
-```postgresql
+```sql
 -- replica:
 INSERT INTO t1 VALUES (11, 'value_11'); -- (1)
 
@@ -260,7 +260,7 @@ INSERT INTO t1 VALUES (14, 'value_14'); -- (5)
 
 Now master will have 14 rows while replica only 11. This is because `(2)` wasn't replicated due to conflict. 
 Also replica's subscription will be stopped:
-```postgresql
+```sql
 -- master
 SELECT * FROM pg_stat_replication;
 ```
@@ -279,7 +279,7 @@ This conflict should be fixed manually:
 - skip conflicting transaction
 
 First solution is the simplest but only if you know exactly which rows cause a conflict:
-```postgresql
+```sql
 DELETE FROM t1 WHERE id = 11;
 -- restart subscription
 ALTER SUBSCRIPTION {subscription_name} DISABLE;
@@ -288,12 +288,12 @@ ALTER SUBSCRIPTION {subscription_name} ENABLE;
 
 Now let's consider the second solution: skipping conflicting transaction. To do this we need to know lsn to advance to.
 Find the needed lsn by inspecting wal files or just get the current number:
-```postgresql
+```sql
 -- master
 select pg_current_wal_lsn();
 ```
 And then on replica:
-```postgresql
+```sql
 -- replica
 SELECT 'pg_' || oid as origin FROM pg_subscription where subname = '{subscription_name}';
 
@@ -305,7 +305,7 @@ ALTER SUBSCRIPTION {subscription_name} ENABLE;
 # Replica identity <a name="replica-identity"></a>
 Previous examples were done using `t1` table which has explicit primary key. Table `t2` doesn't have any unique indexes, but logical replication 
 requires it: 
-```postgresql
+```sql
 INSERT INTO t2 VALUES (1, 'value_1'); -- (1) 
 -- update will cause error
 UPDATE t2 SET value = 'updated_' || t2.id WHERE t2.id = 1; -- (2)
@@ -316,14 +316,14 @@ UPDATE t2 SET value = 'updated_' || t2.id WHERE t2.id = 1; -- (4)
 ```
 Operation `(3)` will update table and set replica identity as a full row. This is not efficient, but now it is possible to make updates and deletes
 to the `t2`. Possible values for replica identity:
-```postgresql
+```sql
 ALTER TABLE {tablename} REPLICA IDENTITY { DEFAULT | USING INDEX index_name | FULL | NOTHING }
 ```
 
 # DDL <a name="ddl"></a>
 As mentioned before, table schema should be equal on master and replica and should be synchronized manually because logical replication does not replicate DDL operations.
 Let's condier an example:
-```postgresql
+```sql
 -- master
 CREATE TABLE t3
 (
@@ -352,7 +352,7 @@ CREATE SUBSCRIPTION {subscription_name}
 
 In this setup replica will not get any rows because it will stuck on table synchronization step.
 Let's fix it:
-```postgresql
+```sql
 -- replica
 ALTER TABLE t1 ADD COLUMN field_2 text NOT NULL DEFAULT '';
 ALTER SUBSCRIPTION {subscription_name} ENABLE;
