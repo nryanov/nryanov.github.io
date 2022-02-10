@@ -2,7 +2,7 @@
 layout: single
 title:  "PostgreSQL: Logical Replication"
 date:   2022-02-04 22:50:00 +0300
-categories: postgresql replication database high-availability logical-replication
+categories: postgresql replication database logical-replication
 ---
 
 # Table of contents
