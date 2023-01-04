@@ -9,7 +9,7 @@ categories: postgresql replication database high-availability log-shipping
 1. [Prerequisite](#prerequisite)
 2. [Log shipping replication](#log-shipping-replication)
 3. [Setup](#setup)
-  1. [Primary server](#aprimary server)
+  1. [Primary server](#primary-server)
   2. [Replica server](#replica)
 4. [Replication in action](#action)   
 5. [Standby promotion](#standby-promotion)
@@ -36,7 +36,7 @@ As `LSR` is a physical replication there are some general limitations and recomm
 
 Theory is good, but let's try it on practice now.
 
-# Setup <a name="setup"
+# Setup <a name="setup"></a>
 For simple sample we will setup two PostgreSQL instances: one as a primary servers and another one as a standby. We will create new clusters for each instances but if you already have some configured PostgreSQL instances, then you can skip commands like `initdb -D <path>`.
 
 ## Primary server <a name="primary server"></a>
@@ -110,7 +110,7 @@ pg_ctl -D /tmp/replica -o "-p 5433" -l /tmp/replica/logs start
 psql -h localhost -p 5433 -d postgres
 ```
 
-# Replication in action <a name="action">
+# Replication in action <a name="action"></a>
 Now we have primary and standby instances. Let's try to execute some queries and check what will happen.
 First of all, let's check that backup was successful and at least rows count is the same on primary and standby:
 ```sql
@@ -130,7 +130,7 @@ INSERT INTO t1(field) SELECT ('value_' || i) AS field FROM GENERATE_SERIES(1, 30
 
 This should be enough to fill 16 mb of data and trigger WAL segment archivation. If we execute `count` query again we still may see that results are different but on standby it was also updated. Results are different because some updated were included in new WAL segment which is not archived yet. This is a `replication lag` which we discussed at the beginning. Replication lag may be reduced using streaming replication
 
-# Standby promotion <a name="standby-promotion">
+# Standby promotion <a name="standby-promotion"></a>
 In some cases you need to promote standby to primary. This may happen if primary server is down for  along time or, for example, your system can't operate normally if database was shutdown even for a short time and you have to promote standby fast. In this case you may just execute this query in standby:
 ```sql
 SELECT pg_promote();
@@ -138,5 +138,5 @@ SELECT pg_promote();
 
 After this query standby instance became a new primary. To return old primary after promotion standby you need to restore it.
 
-# Conclusion <a name="conclusion"
+# Conclusion <a name="conclusion"></a>
 This was a quick example of how to setup log shipping replication in PostgreSQL. More info could be found in the official [documentation](https://www.postgresql.org/docs/current/warm-standby.html).

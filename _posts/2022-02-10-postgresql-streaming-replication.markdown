@@ -9,7 +9,7 @@ categories: postgresql replication database streaming-replication
 1. [Prerequisite](#prerequisite)
 2. [Streaming replication](#streaming-replication)
 3. [Setup](#setup)
-   1. [Primary server](#aprimary server)
+   1. [Primary server](#primary-server)
    2. [Replica server](#replica)
    3. [Sync mode](#sync-mode)
 4. [Standby promotion](#standby-promotion)
