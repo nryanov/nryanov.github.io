@@ -16,21 +16,21 @@ categories: postgresql replication database streaming-replication
 5. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine. 
+All examples assumes that postgresql is already installed on your machine.
 Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Streaming replication <a name="streaming-replication"></a>
-Streaming replication is a built-in mechanism in PostgreSQL to replicate data between multiple servers. 
-It is a low-level replication mechanism as it streams WAL data from primary server to the replica through the physical replication slot, 
+Streaming replication is a built-in mechanism in PostgreSQL to replicate data between multiple servers.
+It is a low-level replication mechanism as it streams WAL data from primary server to the replica through the physical replication slot,
 so it is highly recommended to replicate data between servers using similar PostgreSQL major version (minor versions could be different).
 Also it is a good idea to have equal servers in terms of server configuration such as CPU, RAM and Disks, especially if you consider to promote replica to master if primary server goes down.
 
 If you need to replicate data between PostgreSQL servers which use different versions then consider Logical replication.
 
 # Setup <a name="setup"></a>
-To setup streaming replication we need at least two instances: one will be running as a primary server, another one as a replica. 
+To setup streaming replication we need at least two instances: one will be running as a primary server, another one as a replica.
 
-## primary server <a name="primary server"></a>
+## Primary server <a name="primary server"></a>
 ```sh
 -- init new cluster
 initdb -D /tmp/postgresql/db1
@@ -79,18 +79,18 @@ This tool has more flags but for now we will inspect only the most important for
 - `-X` -- as we want to create a standby replica we need to synchronize all data from the primary server. While creating backup primary server can continue to work so it will generate new WAL files. `-X stream` allows to stream WAL data while the backup is being taken.
 - `-S` -- specify replication slot name. Can be used only with `-X stream`. If we don't specify it then temporary replication slot will be created. As we want to create a standby replica then it is important to save any necessary WAL data in the time between the end of the base backup and the start of streaming replication on the new standby.
 - `-d` -- this flag allows as to specify connection string or just used to connect to the server. Any conflicting command line values will be overwritten. In this case we explicitly specify `application_name`.
-- `-h`, `-p`, `-U`, `-W` -- host, port, username and password prompt 
+- `-h`, `-p`, `-U`, `-W` -- host, port, username and password prompt
 
 When `pg_basebackup` is done we can see that there are `standby.signal` and `postgresql.auto.conf` files. `standby.signal` is just a marker which indicates that this instance is a replica.
 `postgresql.auto.conf` included parameters which needed for replication:
 ```sh
-cat postgresql.auto.conf 
+cat postgresql.auto.conf
 ```
 ```
 primary_conninfo = 'user=streaming_replicator password=password channel_binding=prefer host=localhost port=5432 application_name=replica1 sslmode=prefer sslcompression=0 sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres target_session_attrs=any'
 primary_slot_name = 'replication_slot'
 ```
-As you can see, `primary_slot_name` has exactly the same value as we specified when executing `pg_basebackup` with `-S` flag. Also it includes `primary_conninfo` with `application_name=replica1`. 
+As you can see, `primary_slot_name` has exactly the same value as we specified when executing `pg_basebackup` with `-S` flag. Also it includes `primary_conninfo` with `application_name=replica1`.
 
 Now we can start replica:
 ```sh
@@ -210,9 +210,9 @@ INSERT INTO t1(id, value) VALUES (11, 'value_11');
 [14922] LOG:  database system is ready to accept connections
 ```
 
-Also after `SELECT pg_promote()` file `standby.signal` will be removed and replica becomes the new primary server. 
+Also after `SELECT pg_promote()` file `standby.signal` will be removed and replica becomes the new primary server.
 To return old primary server instance we need to restore it and make it, for example, as a new replica.
 
 # Conclusion <a name="conclusion"></a>
-This was a quick example of how to setup streaming replication in PostgreSQL. 
+This was a quick example of how to setup streaming replication in PostgreSQL.
 There is also a topic about high-availability but this will be covered in other articles.
