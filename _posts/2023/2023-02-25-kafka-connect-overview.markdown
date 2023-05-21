@@ -11,10 +11,9 @@ categories: kafka kafka-connect overview
    2. [Tasks](#tasks)
    3. [State](#state)
    4. [Workers](#workers)
-   5. [Sources](#sources)
-   6. [Sinks](#sinks)
-   7. [Converters](#converters)
-   8. [Transforms](#transforms)
+   5. [Sources and Sinks](#sources-and-sinks)
+   6. [Converters](#converters)
+   7. [Transforms](#transforms)
 2. [Example](#example)
 3. [Conclusion](#conclusion)
 
@@ -54,13 +53,46 @@ If `connector` manage `tasks` and describes `what` should be done, `task` descri
 is responsible for state storage.
 
 ## State <a name="state"></a>
+State -- is a crucial part for every streaming processing. As mentioned earlier, `task` is responsible for state storage.
+The important thing is that `task` doesn't store anything in itself -- all state changes are stored in special kafka topics which are configured 
+for kafka connect cluster. 
+
+Distributed state consists of multiple parts:
+- Offset storage (`offset.storage.topic`) -- place for storing processed offsets. It is not only offsets of kafka topics but also may be position of last processed row from DB or something like this which will indicate a point from which task can continue 
+- Config storage (`config.storage.topic`) -- is a place for store configs of connectors
+- Status storage (`status.storage.topic`) -- this is a status of tasks
+
+Standalone state consists of:
+- Offset storage -- in case of standalone mode it is a local file (`offset.storage.file.filename`)
+
+Depending on Kafka connect cluster mode (`distributed` or `standalone`) state will be stored differently:
+![Kafka connect task state storage](/assets/images/2023/kafka-connect-task-state-storage.png)
+
+If kafka connect cluster running in a distributed mode then state will be stored in the kafka cluster itself,
+otherwise it will be stored in the local file system.
 
 ## Workers <a name="workers"></a>
+Previously we discussed logical components such as `connectors` and `tasks`. But those components should be run somewhere.
+`Worker` -- is a physical component which is responsible for running logical components. Simply, it is just a node which is part of kafka connect cluster. 
+
 ![Kafka connect worker](/assets/images/2023/kafka-connect-worker.png)
 
-## Sources <a name="sources"></a>
+Kafka connect cluster consists of worker nodes, and you can add or remove them almost dynamically. The only thing you should remember is
+that each node should have the same:
+- `group.id`
+- `offset.storage.topic`
+- `config.storage.topic`
+- `status.storage.topic`
 
-## Sinks <a name="sinks"></a>
+Workers nodes will automatically discover each other if they have the same `group.id` value.
+
+## Sources and Sinks <a name="sources-and-sinks"></a>
+`Source` -- is a connector type which responsible for consume data from the outer system and store it into the selected kafka topic(s).  
+`Sink` -- is a connector type which responsible for consume data from the selected kafka topic(s) and store these data into the outer system.
+
+As you can see, both `source` and `sink` are connectors. Kafka connect has some pre-installed connectors but as mentioned earlier you can also write your own or install open-source connector.
+Installing of the connector is a simple process: you just need a bunch of JAR files required for connector and put them into desired location of each worker node. Then you should update configuration
+and specify that location to allow nodes discover and use it.
 
 ## Converters <a name="converters"></a>
 
