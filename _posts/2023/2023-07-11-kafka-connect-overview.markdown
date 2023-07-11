@@ -22,7 +22,7 @@ Imagine you have a task where you need to fetch some data from a database and in
 You can solve both tasks using plain kafka consumer/producer API or even use kafka streams library, 
 but if you don't need comprehensive data transformations (e.g. enrichment, stream joining) then you can use Kafka connect for it.
 
-![Kafka connect concepts](/assets/images/2023/kafka-connect-concepts.png)
+![Kafka connect concepts](/assets/images/2023/kafka-connect-overview/kafka-connect-concepts.png)
 
 Kafka connect -- is a framework that allows to stream data from and into the Kafka.
 
@@ -66,7 +66,7 @@ Standalone state consists of:
 - Offset storage -- in case of standalone mode it is a local file (`offset.storage.file.filename`)
 
 Depending on Kafka connect cluster mode (`distributed` or `standalone`) state will be stored differently:
-![Kafka connect task state storage](/assets/images/2023/kafka-connect-task-state-storage.png)
+![Kafka connect task state storage](/assets/images/2023/kafka-connect-overview/kafka-connect-task-state-storage.png)
 
 If kafka connect cluster running in a distributed mode then state will be stored in the kafka cluster itself,
 otherwise it will be stored in the local file system.
@@ -75,7 +75,7 @@ otherwise it will be stored in the local file system.
 Previously we discussed logical components such as `connectors` and `tasks`. But those components should be run somewhere.
 `Worker` -- is a physical component which is responsible for running logical components. Simply, it is just a node which is part of kafka connect cluster. 
 
-![Kafka connect worker](/assets/images/2023/kafka-connect-worker.png)
+![Kafka connect worker](/assets/images/2023/kafka-connect-overview/kafka-connect-worker.png)
 
 Kafka connect cluster consists of worker nodes, and you can add or remove them almost dynamically. The only thing you should remember is
 that each node should have the same:
@@ -97,7 +97,7 @@ and specify that location to allow nodes discover and use it.
 ## Converters <a name="converters"></a>
 Converters in kafka connect is simply in/out-format.
 
-![Kafka connect worker](/assets/images/2023/kafka-connect-converters.png)
+![Kafka connect worker](/assets/images/2023/kafka-connect-overview/kafka-connect-converters.png)
 
 As you can see, source and sink initially has its own format. To be able to deliver data from
 source to sink data should be saved in intermediate topic. Best option for this is to save data
@@ -113,7 +113,7 @@ In source connector `converter` convert data and after his step converted (or se
 Then sink connector read this data and `converter` convert it (or deserialize) into internal connector format. 
 This is done before sink actually process input data.
 
-![Kafka connect worker](/assets/images/2023/kafka-connect-converters-detailed.png)
+![Kafka connect worker](/assets/images/2023/kafka-connect-overview/kafka-connect-converters-detailed.png)
 
 Each part of the message (key and value) may use different converters (e.g. key -- string, value -- avro).
 
@@ -128,7 +128,7 @@ Each part of the message (key and value) may use different converters (e.g. key 
 - And so on
 
 Each transformation is applied on a single message. If there are multiple transformations then they are applied one by one:
-![Kafka connect worker](/assets/images/2023/kafka-connect-transforms.png)
+![Kafka connect worker](/assets/images/2023/kafka-connect-overview/kafka-connect-transforms.png)
 
 As you can see output of each `trasform` is an input for the next one until the end. 
 It is a very powerful instrument which allows you to modify data, but keep in mind that this technique was designed 
