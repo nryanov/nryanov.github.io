@@ -139,4 +139,4 @@ SELECT pg_promote();
 After this query standby instance became a new primary. To return old primary after promotion standby you need to restore it.
 
 # Conclusion <a name="conclusion"></a>
-This was a quick example of how to setup log shipping replication in PostgreSQL. More info could be found in the official [documentation](https://www.postgresql.org/docs/current/warm-standby.html).
+This was a quick example of how to set up log shipping replication in PostgreSQL. More info could be found in the official [documentation](https://www.postgresql.org/docs/current/warm-standby.html).
