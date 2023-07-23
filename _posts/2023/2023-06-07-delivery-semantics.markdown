@@ -10,11 +10,15 @@ add my own thoughts about all of this.
 
 # Table of contents
 1. [Delivery semantics: overview](#delivery-semantics-overview)
-   1. [At most once](#at-most-once)
-   2. [At least once](#at-least-once)
-   3. [Exactly once](#exactly-once)
-2. [E2E delivery and processing](#e2e-delivery-and-processing)
-3. [Conclusion](#conclusion)
+   1. [At most once](#at-most-onc-delivery)
+   2. [At least once](#at-least-once-delivery)
+   3. [Exactly once](#exactly-once-delivery)
+2. [Processing semantics: overview](#processing-semantics-overview)
+   1. [At most once](#at-most-once-processing)
+   2. [At least once](#at-least-once-processing)
+   3. [Exactly once](#exactly-once-processing)
+3. [E2E delivery and processing](#e2e-delivery-and-processing)
+4. [Conclusion](#conclusion)
 
 # Delivery semantics: overview <a name="delivery-semantics-overview"></a>
 So, what exactly is `delivery semantics` and why this is important? `Delivery semantics` is about guarantees provided by messaging system or delivery protocol.
@@ -65,7 +69,7 @@ As you can see from examples above, different scenarios require different soluti
 
 In the next paragraphs I will explain each guarantee more profoundly. After that we will discuss end-2-end delivery and processing.
 
-## At-most-once <a name="at-most-once"></a>
+## At-most-once <a name="at-most-once-delivery"></a>
 `At-most-once` is the weakest message delivery guarantee. As we already know services which implement it may lose messages, but they shouldn't produce duplicates.
 In real live services may as lose messages as produce duplicates of them, but let's imagine that only message lose is possible for now.
 
@@ -92,10 +96,10 @@ Actually, everything, starting from `producer`:
 
 If `at-most-once` is such unreliable that can lose messages why it even exists? 
 There are multiple answers for it:
-- Because of nature of some systems
+- Special requirements
 - Implementation simplicity
 
-What does `nature of some systems` mean? It means that some systems have special requirements like delivery speed rather than reliability.
+Special requirements mean that some systems have requirements like delivery speed and ability to continue delivery rather than reliability.
 A classic example is VoIP (VoIP) services. Such services use UDP to transfer data. `UDP` is a transport protocol that does not guarantee
 delivery of packages (order and absence of duplicates are also not guaranteed), but using of this protocol allows continuing to receive new data (or voice in this example). 
 At the end, repeating last sentence(s) to your companion is not a big deal in comparison with a stopped call.
@@ -107,9 +111,43 @@ Believe me, this is a miracle if you can choose this guarantee, but it's an unco
 
 Now let's move on to the next guarantee: `at-least-once`.
 
-## At-least-once <a name="at-least-once"></a>
+## At-least-once <a name="at-least-once-delivery"></a>
+The `at-least-once` guarantee as we already know declares that no message will be lost, but some messages may be duplicated during delivery.
+Usually it means that `producer` will not move on to the next message until `consumer` or any other system acknowledge that previous message was successfully delivered.
 
-## Exactly-once <a name="exactly-once"></a>
+In which cases duplication may happen? If we consider only delivery part, then it may happen if `producer` sent message but didn't get acknowledge. In this case `producer` should retry delivery.
+Another example is network problem: `producer` sent message and `consumer` successfully got it, but when `consumer` tried to send acknowledge something went wrong during network communication.
+The same may happen during `producer` sending if, for example, network connection was lost after sending. This will also lead to delivery retry.
+
+[//]: # (// todo: image with examples)
+
+This guarantee requires that `producer` should track if message was successfully sent or not. In most cases this is not a problem,
+but this may affect throughput and decrease it.
+
+As for example you can consider `TCP` protocol. Previously we discussed that `UDP` works in `fire and forget` mode. `TCP` on the other hand
+tracks each packet and if something went wrong then it automatically re-send lost packet. But you may ask `if TCP re-send packets why it doesn't lead to duplication of whole messages?`
+Looking ahead, this is because `consumer` correctly process it. It will be described in the next chapters about processing semantics and end-to-end guarantees.
+
+And finally let's consider `exactly-once`.
+
+## Exactly-once <a name="exactly-once-delivery"></a>
+`Exactly-once` is the most strict guarantee because it requires that each message will be delivered exactly once.
+It's also the most complex guarantee for developing because software system should account a lot of things which may lead to message lose and duplication 
+and such system should also have ways to overcome them.
+
+If we only consider the delivery part, can we really guarantee that the actual delivery will happen `exactly-once`? In my opinion, no.
+I am convinced that the `producer` can't guarantee that it will send the message `exactly-once`. It is just not possible, because a lot of things may go wrong.
+What if the `consumer` responded with an error and required a retry? This is already a duplication in terms of delivery. 
+Another case is network problems again: in such cases the `producer` has to re-send the message because it cannot determine whether it was sent or not:
+- If the `producer` just move on and continue sending the next messages then some messages may be lost. Messages may be lost only if we use the `at-most-once` guarantee.
+- If the `producer` retry to send already successfully sent message then it may produce a duplicate and this is the `at-least-once` guarantee.
+
+[//]: # (// todo: image with examples)
+
+So, if this is not possible then why some systems declare that they support it? The answer is that such systems mean `end-to-end` delivery and processing. 
+Before we will talk about the `end-to-end` guarantee let's look at the processing guarantees that lie on the `consumer` side.
+
+# Processing semantics: overview <a name="processing-semantics-overview"></a>
 
 # E2E delivery and processing <a name="e2e-delivery-and-processing"></a>
 
