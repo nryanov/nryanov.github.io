@@ -30,7 +30,7 @@ Imagine that we develop a system which scrape metrics from other services.
 Our system will scrape metrics from each service with some predefined interval, for example, each 15 seconds. After scrapping out system will save these metrics in some storage for future processing.
 Each scraped metric is a `message`.
 
-![metrics scrapper example](/assets/images/2023/delivery-semantics/at-most-once-example.png)
+![at-most-once-example](/assets/images/2023/delivery-semantics/at-most-once-delivery-example.png)
 
 Assume that other services are not super critical and if metric extraction attempt wasn't successful world will not collapse. 
 In this case we can allow our system to `lost` some messages because we know that another attempt will be made in the next `15 seconds`. 
@@ -38,7 +38,7 @@ Such guarantee is called `at most once`.
 
 Now assume that we develop a part of a big e-commerce product which responsible for generation and sending of some kind of confirmations like purchase or delivery.
 
-![confirmation service example](/assets/images/2023/delivery-semantics/at-least-once-example.png)
+![at-least-once-example](/assets/images/2023/delivery-semantics/at-least-once-delivery-example.png)
 
 Sending confirmations is an important process, and we cannot allow our system to lost messages. Each lost message means that customer may not get a confirmation about purchase or delivery, which can lead worsen user experience.
 Because of it we made a decision that our service will retry confirmation sending until we are 100% assured that confirmation is sent.  
@@ -46,7 +46,7 @@ This guarantee is called `at least once`. As you can see this guarantee already 
 
 The last example will be a banking system which responsible for transactions.
 
-![confirmation service example](/assets/images/2023/delivery-semantics/exactly-once-example.png)
+![exactly-once-example](/assets/images/2023/delivery-semantics/exactly-once-delivery-example.png)
 
 In this example there is some `money transfer service` which responsible for a full transaction cycle:
 - Get money from first user's account
@@ -81,7 +81,7 @@ There are other scenarios where message may be lost, but, again, for now imagine
 
 First case is `happy-path` and shown in the next picture:
 
-![confirmation service example](/assets/images/2023/delivery-semantics/at-most-once-part-1.png)
+![at-most-once-example-1](/assets/images/2023/delivery-semantics/at-most-once-delivery-part-1.png)
 
 Here `producer` produced message and successfully sent it to the `consumer`. `Consumer` also successfully handled it.
 
@@ -92,7 +92,7 @@ Actually, everything, starting from `producer`:
 
 `Consumer` may also not be able correctly handle message due to errors, but as I defined previously, let's think that for now `consumer` is reliable and always correctly handle messages.
 
-![confirmation service example](/assets/images/2023/delivery-semantics/at-most-once-part-2.png)
+![at-most-once-example-2](/assets/images/2023/delivery-semantics/at-most-once-delivery-part-2.png)
 
 If `at-most-once` is such unreliable that can lose messages why it even exists? 
 There are multiple answers for it:
@@ -100,7 +100,7 @@ There are multiple answers for it:
 - Implementation simplicity
 
 Special requirements mean that some systems have requirements like delivery speed and ability to continue delivery rather than reliability.
-A classic example is VoIP (VoIP) services. Such services use UDP to transfer data. `UDP` is a transport protocol that does not guarantee
+A classic example is VoIP (Voice over IP) services. Such services use UDP to transfer data. `UDP` is a transport protocol that does not guarantee
 delivery of packages (order and absence of duplicates are also not guaranteed), but using of this protocol allows continuing to receive new data (or voice in this example). 
 At the end, repeating last sentence(s) to your companion is not a big deal in comparison with a stopped call.
 
@@ -119,7 +119,7 @@ In which cases duplication may happen? If we consider only delivery part, then i
 Another example is network problem: `producer` sent message and `consumer` successfully got it, but when `consumer` tried to send acknowledge something went wrong during network communication.
 The same may happen during `producer` sending if, for example, network connection was lost after sending. This will also lead to delivery retry.
 
-[//]: # (// todo: image with examples)
+![at-least-once-delivery-example-part-1](/assets/images/2023/delivery-semantics/at-least-once-delivery-part-1.png)
 
 This guarantee requires that `producer` should track if message was successfully sent or not. In most cases this is not a problem,
 but this may affect throughput and decrease it.
@@ -142,13 +142,58 @@ Another case is network problems again: in such cases the `producer` has to re-s
 - If the `producer` just move on and continue sending the next messages then some messages may be lost. Messages may be lost only if we use the `at-most-once` guarantee.
 - If the `producer` retry to send already successfully sent message then it may produce a duplicate and this is the `at-least-once` guarantee.
 
-[//]: # (// todo: image with examples)
+[//]: # (// todo add image)
 
 So, if this is not possible then why some systems declare that they support it? The answer is that such systems mean `end-to-end` delivery and processing. 
 Before we will talk about the `end-to-end` guarantee let's look at the processing guarantees that lie on the `consumer` side.
 
 # Processing semantics: overview <a name="processing-semantics-overview"></a>
+Previously we've talked about delivery guarantees and consider that there is some `producer` which produce messages and some kind of `consumer` or even `reciever` that get these messages.
+We defined such communication between `producer <-> consumer` as a `delivery` and said that `consumer` is 100% reliable and always process each message correctly. But is it true? 
+In a real production systems `consumer` whatever it is also may produce some errors which may lead to message processing inconsistency. Let's dive deeper in it and consider the already known semantics but from another perspective.
+
+## At-most-once <a name="at-most-once-processing"></a>
+Again we will start from the weakest guarantee. Imagine that we have some `message broker` (Kafka, RabbitMQ, ActiveMQ, etc.) and we want to read and process some messages.
+For it, we will use a `consumer` which will ask a broker for the next message (let's consider that messages come one by one). Each message should be processed by the `consumer` and processing must be acknowledged.
+For simplicity, we also assume that communication between the `message broker` and the `consumer` in terms of network is reliable and may not produce any error. It will help us to concentrate only on processing step.
+
+[//]: # (// todo add image)
+
+Ok, the `consumer` got a message, acknowledge it and then process it. Is this pipeline reliable in terms of guaranteed message processing? Answer is no.
+The reason is we acknowledge message processing before the actual processing. Everything may happen between this two steps and any error may lead to message lost.
+But in terms of message processing this is called also `at-least-once processing`. 
+
+The reasons why such guarantee exists almost the same as for `at-least-once delivery`:
+- Special requirements
+- Implementation simplicity
+
+Such processing is really simple in terms of implementation and may be useful in some systems which require low latency message processing rather than message processing guarantee.
+But what if we don't want to lose any messages? For this we need another processing guarantee called `at-least-once`.
+
+## At-least-once <a name="at-least-once-processing"></a>
+`At-least-once processing` like `at-least-once delivery` means that each message may be processed one or more times.
+Let's consider a notification service. This service should get task from a message broker and call notification provider to notify an end-user about some event.
+In this case our service does:
+- Get message
+- Try to notify end-user using external notification provider
+- If notification was sent successfully then acknowledge message processing otherwise throw an exception and repeat form the start 
+
+[//]: # (// todo add image)
+
+In case of error in the worst case we not only just read our message second time but we also may send notification twice (and be billed for it twice). 
+This is called `at-least-once pocessing` because we may process each message more than one time, but this give as a guarantee that no message will be lost in terms of processing.
+
+Using message broker this is not hard to achieve such guarantee: we just need to move acknowledgement step after processing. In other systems this may require additional work, but the core idea is the same: `acknowledge message processing after the actual processing`.
+But what if we can't afford nor lost messages nor duplicates? Is it possible? Actually, yes...but with nuances. 
+
+## Exactly-once <a name="exactly-once-processing"></a>
+So, imagine that you have successfully setup message `producer` which generate some messages into our broker. We know that `producer` doesn't lose messages and never produce duplicates.
+And we want the same for our `consumer`.  
+
+[//]: # (// todo add image)
 
 # E2E delivery and processing <a name="e2e-delivery-and-processing"></a>
+
+[//]: # (// todo add image)
 
 # Conclusion <a name="conclusion"></a>
