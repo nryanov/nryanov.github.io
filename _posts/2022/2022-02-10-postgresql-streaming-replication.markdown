@@ -16,8 +16,8 @@ categories: postgresql replication database streaming-replication
 5. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine.
-Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
+All examples assume that postgresql is already installed on your machine.
+Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Streaming replication <a name="streaming-replication"></a>
 Streaming replication is a built-in mechanism in PostgreSQL to replicate data between multiple servers.

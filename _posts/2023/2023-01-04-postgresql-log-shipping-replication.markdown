@@ -16,16 +16,16 @@ categories: postgresql replication database high-availability log-shipping
 6. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine.
-Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
+All examples assume that postgresql is already installed on your machine.
+Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Log shipping replication <a name="log-shipping-replication"></a>
 Log shipping replication (i will use a short name for it `LSR`) is another one method to physically replicate data between multiple database clusters. As name says this method is about to replicate data through WAL-files (segment) which is transferred between instances. This is probably the most simple and straightforward method for data replication, but this simplicity comes with price and compromises which also should be accounted.
 
 `LSR` has only async mode. There are multiple reasons for it:
 1. The most obvious that it take some time to transfer WAL segments between instances;
-2. Another reason is that not all commited transactions may be flushed immediately if `synchronous_commit=off`. In this case there is a possibility that some transactions may be lost if database was shutdown abnormally;
-3. Also only archived segments may be transferred. This means that segment will be transferred only when it is full (16 mb by default) and after it was archived. There is a settings which may reduce a time for archiving: `archive_timeout`.
+2. Another reason is that not all committed transactions may be flushed immediately if `synchronous_commit=off`. In this case there is a possibility that some transactions may be lost if database was shutdown abnormally;
+3. Also, only archived segments may be transferred. This means that segment will be transferred only when it is full (16 mb by default) and after it was archived. There is a settings which may reduce a time for archiving: `archive_timeout`.
 
 Because `LSR` is async standby replica may be not fully synced with primary instance and because of it such a replica also called `warm standby`.
 
@@ -67,7 +67,7 @@ To connect to the created primary instance you can use this command:
 psql -h localhost -p 5432 -d postgres
 ```
 
-As we didn't setup any user or database by default we can connect to the postgres database without any explicit credentials.
+As we didn't set up any user or database by default we can connect to the postgres database without any explicit credentials.
 
 After connection to the new primary is established we can create something:
 ```sql
@@ -91,7 +91,7 @@ INSERT INTO t1(field) SELECT ('value_' || i) AS field FROM GENERATE_SERIES(1, 20
 Now we can see that some WAL segments were archived and saved into the `/tmp/wal_archive`. Let's move on to the replica server setup.
 
 ## Replica server <a name="replica"></a>
-To setup replica we should backup it from the primary instance using [pg_basebackup](https://www.postgresql.org/docs/current/app-pgbasebackup.html) tool:
+To set up replica we should backup it from the primary instance using [pg_basebackup](https://www.postgresql.org/docs/current/app-pgbasebackup.html) tool:
 ```sh
 pg_basebackup -D /tmp/replica -R -h localhost -p 5432
 ```
@@ -131,7 +131,7 @@ INSERT INTO t1(field) SELECT ('value_' || i) AS field FROM GENERATE_SERIES(1, 30
 This should be enough to fill 16 mb of data and trigger WAL segment archivation. If we execute `count` query again we still may see that results are different but on standby it was also updated. Results are different because some updated were included in new WAL segment which is not archived yet. This is a `replication lag` which we discussed at the beginning. Replication lag may be reduced using streaming replication
 
 # Standby promotion <a name="standby-promotion"></a>
-In some cases you need to promote standby to primary. This may happen if primary server is down for  along time or, for example, your system can't operate normally if database was shutdown even for a short time and you have to promote standby fast. In this case you may just execute this query in standby:
+In some cases you need to promote standby to primary. This may happen if primary server is down for a long time or, for example, your system can't operate normally if database was shutdown even for a short time and you have to promote standby fast. In this case you may just execute this query in standby:
 ```sql
 SELECT pg_promote();
 ```
