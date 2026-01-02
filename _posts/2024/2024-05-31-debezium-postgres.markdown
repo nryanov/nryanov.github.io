@@ -1,8 +1,8 @@
 ---
 layout: single
-title: "PostgreSQL: how to stream data changes to kafka?"
+title: "PostgreSQL: Log-based CDC using debezium"
 date: 2024-05-10 04:30:00 +0300
-categories: kafka-connect postgres replication cdc debezium logical-replication wal kafka
+categories: postgres replication cdc debezium logical-replication wal
 ---
 
 Before diving into details about streaming I want to start from the task which we will try to solve during this article.
@@ -22,13 +22,11 @@ How we can achieve this? This is the main question which we will consider and tr
 
 # Table of contents
 1. [CDC: Change Data Capture](#cdc)
-2. [Postgres: NOTIFY](#postgres-notify)
-3. [Postgres: outbox pattern](#postgres-outbox)
-4. [Step back: how Postgres handle data changes?](#how-postgres-handle-data-changes)
-5. [Logical replication and WAL](#logical-replication-and-wal)
-6. [Debezium](#debezium)
-7. [Real usages of CDC](#cdc-usages)
-8. [Conclusion](#conclusion)
+2. [How Postgres handle data changes?](#how-postgres-handle-data-changes)
+3. [Logical replication and WAL](#logical-replication-and-wal)
+4. [Debezium](#debezium)
+5. [Real usages of CDC](#cdc-usages)
+6. [Conclusion](#conclusion)
 
 # CDC: Change Data Capture <a name="cdc"></a>
 In the Internet the `CDC` is described as a design pattern which allows to track data changes (deltas).
@@ -63,19 +61,4 @@ Your goal will be to get something like that:
 
 And `CDC` can help you with it. Let's move on and consider different ways to achieve this.
 
-# Postgres: NOTIFY <a name="postgres-notify"></a>
-As all examples will be done using postgres we can consider some specific features of this RDBMS.
-
-`NOTIFY` is one of the [Postgres feature](https://www.postgresql.org/docs/current/sql-notify.html) which allows to make simple interprocess communication.
-How to set up this? Firstly, let's start with a Postgres instance. We will use docker for it:
-```shell
-docker run -p 5432:5432 --name postgres-notify -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=postgres -d postgres:14
-```
-
-And open two connections (in different terminals):
-```shell
-psql postgresql://postgres:postgres@localhost:5432/postgres
-```
-
-`NOTIFY` has some important limitations:
-- Despite the fact, the all notifications will be saved in queue until all clients will receive each notification this queue has limited size. When the queue is full then transaction which try to send new notification will fail at the commit point. `pg_notification_queue_usage` allows to get information about queue usage.  
+# How Postgres handle data changes? <a name="how-postgres-handle-data-changes"></a>
