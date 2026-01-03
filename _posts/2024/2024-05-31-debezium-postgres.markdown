@@ -11,8 +11,7 @@ categories: postgres replication cdc debezium logical-replication wal
 3. [How Postgres handle data changes?](#how-postgres-handle-data-changes)
 4. [Logical replication and WAL](#logical-replication-and-wal)
 5. [Debezium](#debezium)
-6. [Real usages of CDC](#cdc-usages)
-7. [Conclusion](#conclusion)
+6. [Conclusion](#conclusion)
 
 # Introduction <a name="introduction"></a>
 In this little article I'll show different ways to set up debezium for log-based CDC.
@@ -88,3 +87,11 @@ ALTER TABLE {table} REPLICA IDENTITY DEFAULT -- when PK exists
 ALTER TABLE {table} REPLICA IDENTITY USING INDEX {index} -- when unique index exists
 ALTER TABLE {table} REPLICA IDENTITY FULL -- when nor PK, not unique index exist
 ```
+
+Finally, `before` and `after` contains information about how row looked before operation and after it. 
+Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica identity). Also, not every column will be presented in `after` if it wasn't changed (TOASTed columns).
+
+# Debezium <a name="debezium"></a>
+
+
+# Conclusion <a name="conclusion"></a>
