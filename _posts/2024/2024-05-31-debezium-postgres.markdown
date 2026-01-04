@@ -95,6 +95,8 @@ ALTER TABLE {table} REPLICA IDENTITY FULL -- when nor PK, not unique index exist
 Finally, `before` and `after` contains information about how row looked before operation and after it. 
 Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica identity). Also, not every column will be presented in `after` if it wasn't changed (TOASTed columns).
 
+More info about logical replication can be found [in the article about logical replication in postgres]({{ site.baseurl }}{% link _posts/2022/2022-02-04-postgresql-logical-replication.markdown %}).
+
 # Debezium <a name="debezium"></a>
 [Debezium](https://github.com/debezium/debezium) is an open source project that provides a low latency data streaming platform for change data capture (CDC). 
 Debezium has many connectors to the different RDBMS, but in current case we are interested in [postgres connector](https://github.com/debezium/debezium/tree/main/debezium-connector-postgres).
@@ -342,4 +344,11 @@ curl --request POST \
 After everything has done, you can execute DML queries on `public.data` table and every update will be saved into the target topic.
 The name of the target topic will be generated using `topic.prefix` and full table name (schema + name).
 
+More info about kafka-connect can be found [in the article about kafka-connect]({{ site.baseurl }}{% link _posts/2023/2023-07-11-kafka-connect-overview.markdown %}).
+
 # Conclusion <a name="conclusion"></a>
+In this article we've shortly seen how debezium can be used for log-based CDC in postgres. 
+Also, we've seen different ways of debezium setup. I didn't compare them because each of them obviously has its cons and pros and final decision will be done not only depending on technical aspects, 
+but on concrete task which may has specific limitations. My goal was to show these options and give some examples which will allow you to start experimenting with debezium as fast as possible.
+
+Finally, debezium is a good choice for CDC (if considering log-based variant), but CDC can be done using other techniques which will be considered in the future article.
