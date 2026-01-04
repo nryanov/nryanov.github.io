@@ -92,6 +92,122 @@ Finally, `before` and `after` contains information about how row looked before o
 Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica identity). Also, not every column will be presented in `after` if it wasn't changed (TOASTed columns).
 
 # Debezium <a name="debezium"></a>
+[Debezium](https://github.com/debezium/debezium) is an open source project that provides a low latency data streaming platform for change data capture (CDC). 
+Debezium has many connectors to the different RDBMS, but in current case we are interested in [postgres connector](https://github.com/debezium/debezium/tree/main/debezium-connector-postgres).
 
+For the next examples postgres in docker will be used:
+```yaml
+services:
+  database:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=5"
+      - "-c"
+      - "max_replication_slots=5"
+```
+
+Debezium can be run as a kafka-connect connector or as a separate application (debezium-server or hand-made debezium-application) and we'll shortly see how it can be done.
+In general words, [debezium-server](https://debezium.io/documentation/reference/stable/operations/debezium-server.html) is an application which is already written for you using `debezium-embedded` module (there are additional modules but this one is the most crucial).
+As it is a complete application, the only step you need to do is to configure it before start (according to [documentation](https://debezium.io/documentation/reference/stable/operations/debezium-server.html)):
+```shell
+# download archive
+curl -O https://repo1.maven.org/maven2/io/debezium/debezium-server-dist/3.4.0.Final/debezium-server-dist-3.4.0.Final.tar.gz
+tar -xvzf debezium-server-dist-3.4.0.Final.tar.gz
+cd debezium-server-dist-3.4.0.Final/
+# run
+./run/sh
+```
+And that's it.  
+
+The next option to use debezium is to build application based on `debezium-embedded` by yourself. Complete example can be found [here](https://github.com/nryanov/presentations/tree/main/smartdata/cdc-via-debezium/code-samples/postgres-debezium). The most important part of such an application is `DebeziumEngine` instance:
+```java
+Properties properties = new Properties();
+// initialize properties
+
+EventConsumer<String, String> consumer = new EventConsumer<>() {...};  // consumer instance 
+DebeziumEngine<ChangeEvent<String, String>> engine = DebeziumEngine.create(Json.class)
+                .using(properties)
+                .notifying(consumer)
+                .build();
+
+ExecutorService executor = Executors.newSingleThreadExecutor();
+executor.execute(engine);
+```
+
+In this short example DebeziumEngine is created which will read events and pass them as a json entities to the specified consumer. You can always choose another format (predefined or using your own based on raw binary arrays).
+Consumer is a simple interface which may looks like this:
+```java
+public class JsonEventConsumer implements EventConsumer<String, String> {
+    private static final Logger logger = Logger.getLogger(JsonEventConsumer.class);    
+
+    @Override
+    public void handleBatch(List<ChangeEvent<String, String>> records, DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> committer) {
+        try {
+            records.forEach(it -> {
+                try {
+                    logger.infof("Record: %s", it.value());
+                    committer.markProcessed(it); // should be called for each record (or at least for the last one)
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            committer.markBatchFinished(); // should be called when batch processing is complete -> may trigger offsets committing
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+To make this example complete let's review minimal set of properties which can be used to run it:
+```java
+
+Properties properties = new Properties();
+properties.setProperty("name", "local-application");
+properties.setProperty("connector.class", "io.debezium.connector.postgresql.PostgresConnector");
+// offset storage settings
+properties.setProperty("offset.storage", "io.debezium.storage.jdbc.offset.JdbcOffsetBackingStore");
+properties.setProperty("offset.storage.jdbc.table.name", "debezium_postgresql_engine_offsets");
+properties.setProperty("offset.storage.jdbc.table.ddl", "CREATE TABLE %s (id TEXT PRIMARY KEY, offset_key TEXT, offset_val TEXT, record_insert_ts TIMESTAMP NOT NULL, record_insert_seq INTEGER NOT NULL)");
+properties.setProperty("offset.storage.jdbc.connection.url", "jdbc:postgresql://localhost:5432/postgres");
+properties.setProperty("offset.storage.jdbc.connection.user", "postgres");
+properties.setProperty("offset.storage.jdbc.connection.password", "postgres");
+properties.setProperty("offset.flush.interval.ms", "60000");
+// database settings
+properties.setProperty("database.hostname", "localhost");
+properties.setProperty("database.dbname", "postgres");
+properties.setProperty("database.port", "5432");
+properties.setProperty("database.user", "postgres");
+properties.setProperty("database.password", "postgres");
+properties.setProperty("publication.name", "debezium_publication");
+properties.setProperty("slot.name", "debezium_slot");
+properties.setProperty("plugin.name", "pgoutput");
+properties.setProperty("snapshot.mode", "NO_DATA");
+properties.setProperty("topic.prefix", "local");
+// do not include schema
+properties.setProperty("key.converter.schemas.enable", "false");
+properties.setProperty("value.converter.schemas.enable", "false");
+```
+
+
+============================================TODO============================================
+Some DBs may support parallel events reading but for postgres only one instance of subscriber (in our case it is a debezium instance) can read WALs from concrete logical-slot.
+Because of that it is not possible to parallelize processing (nor via custom application, nor via kafka-connect connector `tasks.max` property).
 
 # Conclusion <a name="conclusion"></a>
