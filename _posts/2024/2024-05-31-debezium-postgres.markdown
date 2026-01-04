@@ -11,6 +11,10 @@ categories: postgres replication cdc debezium logical-replication wal
 3. [How Postgres handle data changes?](#how-postgres-handle-data-changes)
 4. [Logical replication and WAL](#logical-replication-and-wal)
 5. [Debezium](#debezium)
+   1. [Database setup](#database-setup)
+   2. [Debezium-server](#debezium-server)
+   3. [Debezium-engine](#debezium-engine)
+   4. [Kafka-connect connector](#kafka-connect-connector)
 6. [Conclusion](#conclusion)
 
 # Introduction <a name="introduction"></a>
@@ -94,7 +98,9 @@ Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica
 # Debezium <a name="debezium"></a>
 [Debezium](https://github.com/debezium/debezium) is an open source project that provides a low latency data streaming platform for change data capture (CDC). 
 Debezium has many connectors to the different RDBMS, but in current case we are interested in [postgres connector](https://github.com/debezium/debezium/tree/main/debezium-connector-postgres).
+Debezium can be run as a kafka-connect connector or as a separate application (debezium-server or hand-made debezium-application) and we'll shortly see how it can be done.
 
+## Database setup <a name="database-setup"></a>
 For the next examples postgres in docker will be used:
 ```yaml
 services:
@@ -122,7 +128,30 @@ services:
       - "max_replication_slots=5"
 ```
 
-Debezium can be run as a kafka-connect connector or as a separate application (debezium-server or hand-made debezium-application) and we'll shortly see how it can be done.
+To create a slot and publication the next queries should be used:
+```sql
+SELECT PG_CREATE_LOGICAL_REPLICATION_SLOT('debezium_slot', 'pgoutput'); -- require superuser
+CREATE PUBLICATION debezium_publication; -- debezium also can create publication by itself, but for clarity we will create it manually
+```
+
+You can choose almost any type of table for testing, but in this article i'll use this one:
+```sql
+CREATE TABLE public.data(
+  id BIGINT PRIMARY KEY,
+  payload TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),  
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()  
+);
+```
+
+and this table will be added to the created publication manually:
+```sql
+ALTER PUBLICATION debezium_publication ADD TABLE public.data;
+```
+
+## Debezium-server <a name="debezium-server"></a>
+![debezium-server.png](/assets/images/2024/debezium-postgres/debezium-server.png)
+
 In general words, [debezium-server](https://debezium.io/documentation/reference/stable/operations/debezium-server.html) is an application which is already written for you using `debezium-embedded` module (there are additional modules but this one is the most crucial).
 As it is a complete application, the only step you need to do is to configure it before start (according to [documentation](https://debezium.io/documentation/reference/stable/operations/debezium-server.html)):
 ```shell
@@ -134,6 +163,9 @@ cd debezium-server-dist-3.4.0.Final/
 ./run/sh
 ```
 And that's it.  
+
+## Debezium-engine <a name="debezium-engine"></a>
+![debezium-engine.png](/assets/images/2024/debezium-postgres/debezium-engine.png)
 
 The next option to use debezium is to build application based on `debezium-embedded` by yourself. Complete example can be found [here](https://github.com/nryanov/presentations/tree/main/smartdata/cdc-via-debezium/code-samples/postgres-debezium). The most important part of such an application is `DebeziumEngine` instance:
 ```java
@@ -177,7 +209,6 @@ public class JsonEventConsumer implements EventConsumer<String, String> {
 
 To make this example complete let's review minimal set of properties which can be used to run it:
 ```java
-
 Properties properties = new Properties();
 properties.setProperty("name", "local-application");
 properties.setProperty("connector.class", "io.debezium.connector.postgresql.PostgresConnector");
@@ -198,16 +229,117 @@ properties.setProperty("database.password", "postgres");
 properties.setProperty("publication.name", "debezium_publication");
 properties.setProperty("slot.name", "debezium_slot");
 properties.setProperty("plugin.name", "pgoutput");
-properties.setProperty("snapshot.mode", "NO_DATA");
+properties.setProperty("snapshot.mode", "NO_DATA"); // disable initial snapshot for this sample
 properties.setProperty("topic.prefix", "local");
-// do not include schema
-properties.setProperty("key.converter.schemas.enable", "false");
-properties.setProperty("value.converter.schemas.enable", "false");
 ```
 
+The benefit of this variant is definitely that you can control almost everything from the point you get data to the point
+you save data into the sink (also you can choose every sink you want). But the drawback is that you have to code it manually which not always an option due to time, resources, risks, cost of support and so on.
 
-============================================TODO============================================
-Some DBs may support parallel events reading but for postgres only one instance of subscriber (in our case it is a debezium instance) can read WALs from concrete logical-slot.
-Because of that it is not possible to parallelize processing (nor via custom application, nor via kafka-connect connector `tasks.max` property).
+## Kafka-connect connector <a name="kafka-connect-connector"></a>
+Finally, the last option for running debezium is inside kafka-connect cluster as a source connector.
+
+![debezium-kafka-connect.png](/assets/images/2024/debezium-postgres/debezium-kafka-connect.png)
+
+The target sink for debezium in this case is always a kafka topic.
+To play with this variant you can use the next `docker-compose.yaml`:
+
+```yaml
+services:
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=5"
+      - "-c"
+      - "max_replication_slots=5"
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.25
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:28082,OUTSIDE://0.0.0.0:8082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://redpanda:28082,OUTSIDE://localhost:8082
+    ports:
+      - "9092:9092"
+      - "8081:8081"
+
+  debezium:
+    image: quay.io/debezium/connect:3.3.1.Final
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:29092
+      CONFIG_STORAGE_TOPIC: connectors
+      OFFSET_STORAGE_TOPIC: offsets
+    depends_on:
+      - redpanda
+    ports:
+      - "8083:8083"
+
+  schema-registry:
+    image: apicurio/apicurio-registry:3.0.9
+    ports:
+      - "8080:8080"
+```
+
+After you've started containers you can run this curl to create debezium connector:
+```shell
+curl --request POST \
+  --url http://localhost:8083/connectors \
+  --header 'content-type: application/json' \
+  --data '{
+  "name": "debezium-postgres-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "postgres",
+    "database.server.name": "postgres",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_slot",
+    "publication.name": "debezium_publication",
+    "table.include.list": "public.data",
+    "topic.prefix": "local",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "snapshot.mode": "NO_DATA"
+  }
+}'
+```
+
+After everything has done, you can execute DML queries on `public.data` table and every update will be saved into the target topic.
+The name of the target topic will be generated using `topic.prefix` and full table name (schema + name).
 
 # Conclusion <a name="conclusion"></a>
