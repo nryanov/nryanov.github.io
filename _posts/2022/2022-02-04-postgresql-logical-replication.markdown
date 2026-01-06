@@ -21,8 +21,8 @@ categories: postgresql replication database logical-replication
 8. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine. 
-Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
+All examples assume that postgresql is already installed on your machine. 
+Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Logical replication <a name="logical-replication"></a>
 Logical replication is another method to replicate data between multiple nodes. This replication uses publish-subscribe model. 
@@ -265,7 +265,7 @@ Also replica's subscription will be stopped:
 SELECT * FROM pg_stat_replication;
 ```
 
-And in logs you can found something like that:
+And in logs you should find something like that:
 ```text
 2022-02-03 22:17:28.008 [3828] ERROR:  duplicate key value violates unique constraint "t1_pkey"
 2022-02-03 22:17:28.008 [3828] DETAIL:  Key (id)=(11) already exists.
