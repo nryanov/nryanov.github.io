@@ -24,6 +24,8 @@ outputs:
 
 module:
   mounts:
+    - source: "content"
+      target: "content"
     - source: "archetypes"
       target: "archetypes"
     - source: "assets"

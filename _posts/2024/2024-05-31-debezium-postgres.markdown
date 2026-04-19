@@ -2,14 +2,14 @@
 title: "PostgreSQL: Log-based CDC using debezium"
 date: 2024-05-10 04:30:00 +0300
 categories:
-  - postgres
+  - postgresql
   - replication
   - cdc
   - debezium
   - logical-replication
   - wal
 tags:
-  - postgres
+  - postgresql
   - replication
   - cdc
   - debezium
