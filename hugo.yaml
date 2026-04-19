@@ -45,9 +45,13 @@ module:
 
 markup:
   highlight:
-    style: "catppuccin-mocha"
+    style: emacs
+    codeFences: true
+    guessSyntax: false
     lineNos: true
-    noClasses: false
+    lineNumbersInTable: false
+    noClasses: true
+    wrapperClass: highlight
 
 menu:
   main:
@@ -75,7 +79,7 @@ params:
   defaultTheme: "auto"
   disableThemeToggle: false
   ShowReadingTime: true
-  ShowShareButtons: true
+  ShowShareButtons: false
   ShowPostNavLinks: true
   ShowCodeCopyButtons: true
   ShowToc: true
@@ -92,5 +96,3 @@ params:
       url: "https://github.com/nryanov"
     - name: "linkedin"
       url: "https://linkedin.com/in/nryanov"
-    - name: "x"
-      url: "https://twitter.com/nryanov"
