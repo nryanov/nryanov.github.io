@@ -1,8 +1,19 @@
 ---
-layout: single
 title:  "PostgreSQL: Log shipping Replication"
 date:   2023-01-04 22:50:00 +0300
-categories: postgresql replication database high-availability log-shipping
+categories:
+  - postgresql
+  - replication
+  - database
+  - high-availability
+  - log-shipping
+tags:
+  - postgresql
+  - replication
+  - database
+  - high-availability
+  - log-shipping
+url: /postgresql/postgresql-log-shipping-replication/
 ---
 
 # Table of contents

@@ -1,8 +1,15 @@
 ---
-layout: single
 title: "Kafka-connect: overview"
 date: 2023-07-11 04:30:00 +0300
-categories: kafka kafka-connect overview
+categories:
+  - kafka
+  - kafka-connect
+  - overview
+tags:
+  - kafka
+  - kafka-connect
+  - overview
+url: /kafka/kafka-connect-overview/
 ---
 
 # Table of contents

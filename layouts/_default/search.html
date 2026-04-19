@@ -1,0 +1,29 @@
+{{- define "main" }}
+<header class="page-header">
+  <h1>{{ .Title }}</h1>
+  <div class="post-description">
+    Search posts by text. For focused browsing use
+    <a href="/tags/">tags</a> and <a href="/year-archive/">year archive</a>.
+  </div>
+</header>
+
+<link rel="stylesheet" href="/pagefind/pagefind-ui.css">
+<div id="search"></div>
+
+<script src="/pagefind/pagefind-ui.js" type="text/javascript"></script>
+<script type="text/javascript">
+  window.addEventListener("DOMContentLoaded", function () {
+    if (!window.PagefindUI) {
+      return;
+    }
+
+    new PagefindUI({
+      element: "#search",
+      showSubResults: true,
+      showImages: false,
+      resetStyles: false,
+      bundlePath: "/pagefind/"
+    });
+  });
+</script>
+{{- end }}

@@ -1,8 +1,23 @@
 ---
-layout: single
 title: "Delivery and processing semantics: overview"
 date: 2024-05-01 04:30:00 +0300
-categories: overview messaging delivery-semantics processing-semantics exactly-once at-least-once at-most-once
+categories:
+  - overview
+  - messaging
+  - delivery-semantics
+  - processing-semantics
+  - exactly-once
+  - at-least-once
+  - at-most-once
+tags:
+  - overview
+  - messaging
+  - delivery-semantics
+  - processing-semantics
+  - exactly-once
+  - at-least-once
+  - at-most-once
+url: /overview/delivery-and-processing-semantics/
 ---
 
 In this article I want to make an overview of a delivery semantics in messaging systems, describe delivery guarantee and

@@ -3,6 +3,9 @@ _site
 .jekyll-cache
 .jekyll-metadata
 vendor
+public
+resources
+node_modules
 
 *.gem
 .bundle

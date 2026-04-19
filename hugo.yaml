@@ -1,0 +1,94 @@
+baseURL: "https://nryanov.com/"
+languageCode: "en-us"
+title: "Nikita Ryanov"
+theme: "PaperMod"
+
+pagination:
+  pagerSize: 10
+  path: "page"
+
+permalinks:
+  posts: "/:slug/"
+
+enableRobotsTXT: true
+enableEmoji: true
+
+taxonomies:
+  tag: "tags"
+  category: "categories"
+
+outputs:
+  home:
+    - "HTML"
+    - "RSS"
+
+module:
+  mounts:
+    - source: "archetypes"
+      target: "archetypes"
+    - source: "assets"
+      target: "assets"
+    - source: "data"
+      target: "data"
+    - source: "i18n"
+      target: "i18n"
+    - source: "layouts"
+      target: "layouts"
+    - source: "static"
+      target: "static"
+    - source: "_posts"
+      target: "content/posts"
+    - source: "assets"
+      target: "static/assets"
+
+markup:
+  highlight:
+    style: "catppuccin-mocha"
+    lineNos: true
+    noClasses: false
+
+menu:
+  main:
+    - identifier: "about"
+      name: "About"
+      url: "/about/"
+      weight: 10
+    - identifier: "categories"
+      name: "Categories"
+      url: "/categories/"
+      weight: 20
+    - identifier: "archive"
+      name: "Archive"
+      url: "/year-archive/"
+      weight: 30
+    - identifier: "search"
+      name: "Search"
+      url: "/search/"
+      weight: 40
+
+params:
+  author: "Nikita Ryanov"
+  mainSections:
+    - posts
+  defaultTheme: "auto"
+  disableThemeToggle: false
+  ShowReadingTime: true
+  ShowShareButtons: true
+  ShowPostNavLinks: true
+  ShowCodeCopyButtons: true
+  ShowToc: true
+  TocOpen: false
+  ShowBreadCrumbs: true
+  DateFormat: "2006-01-02"
+
+  homeInfoParams:
+    Title: "Nikita Ryanov"
+    Content: "Engineering notes about distributed systems, databases, and streaming."
+
+  socialIcons:
+    - name: "github"
+      url: "https://github.com/nryanov"
+    - name: "linkedin"
+      url: "https://linkedin.com/in/nryanov"
+    - name: "x"
+      url: "https://twitter.com/nryanov"

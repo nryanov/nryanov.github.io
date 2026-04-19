@@ -1,8 +1,17 @@
 ---
-layout: single
 title:  "PostgreSQL: Logical Replication"
 date:   2022-02-04 22:50:00 +0300
-categories: postgresql replication database logical-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+url: /postgresql/postgresql-logical-replication/
 ---
 
 # Table of contents

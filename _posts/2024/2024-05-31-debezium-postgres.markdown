@@ -1,8 +1,21 @@
 ---
-layout: single
 title: "PostgreSQL: Log-based CDC using debezium"
 date: 2024-05-10 04:30:00 +0300
-categories: postgres replication cdc debezium logical-replication wal
+categories:
+  - postgres
+  - replication
+  - cdc
+  - debezium
+  - logical-replication
+  - wal
+tags:
+  - postgres
+  - replication
+  - cdc
+  - debezium
+  - logical-replication
+  - wal
+url: /postgresql/debezium-postgres/
 ---
 
 # Table of contents
@@ -95,7 +108,7 @@ ALTER TABLE {table} REPLICA IDENTITY FULL -- when nor PK, not unique index exist
 Finally, `before` and `after` contains information about how row looked before operation and after it. 
 Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica identity). Also, not every column will be presented in `after` if it wasn't changed (TOASTed columns).
 
-More info about logical replication can be found [in the article about logical replication in postgres]({{ site.baseurl }}{% link _posts/2022/2022-02-04-postgresql-logical-replication.markdown %}).
+More info about logical replication can be found [in the article about logical replication in postgres](/postgresql/postgresql-logical-replication/).
 
 # Debezium <a name="debezium"></a>
 [Debezium](https://github.com/debezium/debezium) is an open source project that provides a low latency data streaming platform for change data capture (CDC). 
@@ -344,7 +357,7 @@ curl --request POST \
 After everything has done, you can execute DML queries on `public.data` table and every update will be saved into the target topic.
 The name of the target topic will be generated using `topic.prefix` and full table name (schema + name).
 
-More info about kafka-connect can be found [in the article about kafka-connect]({{ site.baseurl }}{% link _posts/2023/2023-07-11-kafka-connect-overview.markdown %}).
+More info about kafka-connect can be found [in the article about kafka-connect](/kafka/kafka-connect-overview/).
 
 # Conclusion <a name="conclusion"></a>
 In this article we've shortly seen how debezium can be used for log-based CDC in postgres. 

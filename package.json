@@ -1,0 +1,12 @@
+{
+  "name": "nryanov.github.io",
+  "private": true,
+  "scripts": {
+    "dev": "hugo server -D",
+    "build": "hugo --minify",
+    "build:search": "hugo --minify && npx pagefind --site public"
+  },
+  "devDependencies": {
+    "pagefind": "^1.4.0"
+  }
+}

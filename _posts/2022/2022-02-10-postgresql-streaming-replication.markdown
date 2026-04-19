@@ -1,8 +1,17 @@
 ---
-layout: single
 title:  "PostgreSQL: Streaming Replication"
 date:   2022-02-10 22:50:00 +0300
-categories: postgresql replication database streaming-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+url: /postgresql/postgresql-streaming-replication/
 ---
 
 # Table of contents
