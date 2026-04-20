@@ -1,19 +1,20 @@
 ---
-layout: single
 title:  "PostgreSQL: Log shipping Replication"
 date:   2023-01-04 22:50:00 +0300
-categories: postgresql replication database high-availability log-shipping
+categories:
+  - postgresql
+  - replication
+  - database
+  - high-availability
+  - log-shipping
+tags:
+  - postgresql
+  - replication
+  - database
+  - high-availability
+  - log-shipping
+url: /postgresql/postgresql-log-shipping-replication/
 ---
-
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Log shipping replication](#log-shipping-replication)
-3. [Setup](#setup)
-   1. [Primary server](#primary-server)
-   2. [Replica server](#replica)
-4. [Replication in action](#action)   
-5. [Standby promotion](#standby-promotion)
-6. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
 All examples assume that postgresql is already installed on your machine.

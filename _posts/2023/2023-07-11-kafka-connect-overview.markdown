@@ -1,21 +1,16 @@
 ---
-layout: single
 title: "Kafka-connect: overview"
 date: 2023-07-11 04:30:00 +0300
-categories: kafka kafka-connect overview
+categories:
+  - kafka
+  - kafka-connect
+  - overview
+tags:
+  - kafka
+  - kafka-connect
+  - overview
+url: /kafka/kafka-connect-overview/
 ---
-
-# Table of contents
-1. [Kafka-connect: overview](#kafka-connect-overview)
-   1. [Connectors](#connectors)
-   2. [Tasks](#tasks)
-   3. [State](#state)
-   4. [Workers](#workers)
-   5. [Sources and Sinks](#sources-and-sinks)
-   6. [Converters](#converters)
-   7. [Transforms](#transforms)
-2. [Example](#example)
-3. [Conclusion](#conclusion)
 
 # Kafka-connect: overview <a name="kafka-connect-overview"></a>
 Imagine you have a task where you need to fetch some data from a database and incrementally store it in kafka or read the consumed data from kafka and store it in the database.

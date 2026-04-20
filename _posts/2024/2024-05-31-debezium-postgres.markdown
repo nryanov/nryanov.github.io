@@ -1,23 +1,23 @@
 ---
-layout: single
 title: "PostgreSQL: Log-based CDC using debezium"
 date: 2024-05-10 04:30:00 +0300
-categories: postgres replication cdc debezium logical-replication wal
+categories:
+  - postgresql
+  - replication
+  - cdc
+  - debezium
+  - logical-replication
+  - wal
+tags:
+  - postgresql
+  - replication
+  - cdc
+  - debezium
+  - logical-replication
+  - wal
+url: /postgresql/debezium-postgres/
 ---
 
-# Table of contents
-1. [Introduction](#introduction)
-2. [CDC: Change Data Capture](#cdc)
-3. [How Postgres handle data changes?](#how-postgres-handle-data-changes)
-4. [Logical replication and WAL](#logical-replication-and-wal)
-5. [Debezium](#debezium)
-   1. [Database setup](#database-setup)
-   2. [Debezium-server](#debezium-server)
-   3. [Debezium-engine](#debezium-engine)
-   4. [Kafka-connect connector](#kafka-connect-connector)
-6. [Conclusion](#conclusion)
-
-# Introduction <a name="introduction"></a>
 In this little article I'll show different ways to set up debezium for log-based CDC.
 Before diving into details about debezium, I'll shortly describe CDC and why it may be helpful in some tasks. 
 
@@ -95,7 +95,7 @@ ALTER TABLE {table} REPLICA IDENTITY FULL -- when nor PK, not unique index exist
 Finally, `before` and `after` contains information about how row looked before operation and after it. 
 Looking ahead, `before` not always included (for DEFAULT and INDEX bases replica identity). Also, not every column will be presented in `after` if it wasn't changed (TOASTed columns).
 
-More info about logical replication can be found [in the article about logical replication in postgres]({{ site.baseurl }}{% link _posts/2022/2022-02-04-postgresql-logical-replication.markdown %}).
+More info about logical replication can be found [in the article about logical replication in postgres](/postgresql/postgresql-logical-replication/).
 
 # Debezium <a name="debezium"></a>
 [Debezium](https://github.com/debezium/debezium) is an open source project that provides a low latency data streaming platform for change data capture (CDC). 
@@ -344,7 +344,7 @@ curl --request POST \
 After everything has done, you can execute DML queries on `public.data` table and every update will be saved into the target topic.
 The name of the target topic will be generated using `topic.prefix` and full table name (schema + name).
 
-More info about kafka-connect can be found [in the article about kafka-connect]({{ site.baseurl }}{% link _posts/2023/2023-07-11-kafka-connect-overview.markdown %}).
+More info about kafka-connect can be found [in the article about kafka-connect](/kafka/kafka-connect-overview/).
 
 # Conclusion <a name="conclusion"></a>
 In this article we've shortly seen how debezium can be used for log-based CDC in postgres. 

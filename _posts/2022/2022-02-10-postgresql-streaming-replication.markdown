@@ -1,19 +1,18 @@
 ---
-layout: single
 title:  "PostgreSQL: Streaming Replication"
 date:   2022-02-10 22:50:00 +0300
-categories: postgresql replication database streaming-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+url: /postgresql/postgresql-streaming-replication/
 ---
-
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Streaming replication](#streaming-replication)
-3. [Setup](#setup)
-   1. [Primary server](#primary-server)
-   2. [Replica server](#replica)
-   3. [Sync mode](#sync-mode)
-4. [Standby promotion](#standby-promotion)
-5. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
 All examples assume that postgresql is already installed on your machine.

@@ -1,24 +1,18 @@
 ---
-layout: single
 title:  "PostgreSQL: Logical Replication"
 date:   2022-02-04 22:50:00 +0300
-categories: postgresql replication database logical-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+url: /postgresql/postgresql-logical-replication/
 ---
-
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Logical replication](#logical-replication)
-3. [Setup (asynchronous mode)](#async-setup)
-   1. [Publisher](#async-publisher)
-   2. [Subscriber](#async-subscriber)
-4. [Setup (synchronous mode)](#sync-setup)
-   1. [Publisher](#sync-publicher)
-   2. [Subscriber](#sync-subscriber)
-   3. [Sync mode](#sync-mode)
-5. [Conflict resolution](#conflict-resolution)
-6. [Replica identity](#replica-identity)
-7. [DDL](#ddl)
-8. [Conclusion](#conclusion)
 
 # Prerequisite <a name="prerequisite"></a>
 All examples assume that postgresql is already installed on your machine. 
