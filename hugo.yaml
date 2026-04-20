@@ -88,8 +88,8 @@ params:
   DateFormat: "2006-01-02"
 
   homeInfoParams:
-    Title: "Nikita Ryanov"
-    Content: "Engineering notes about distributed systems, databases, and streaming."
+    Title: "Little Blog"
+    Content: "Posts about databases, distributed systems, languages, tools, software, and pretty much everything else in IT."
 
   socialIcons:
     - name: "github"
