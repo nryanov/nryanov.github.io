@@ -23,18 +23,6 @@ url: /overview/delivery-and-processing-semantics/
 In this article I want to make an overview of a delivery semantics in messaging systems, describe delivery guarantee and
 add my own thoughts about all of this.
 
-# Table of contents
-1. [Delivery semantics: overview](#delivery-semantics-overview)
-   1. [At most once](#at-most-onc-delivery)
-   2. [At least once](#at-least-once-delivery)
-   3. [Exactly once](#exactly-once-delivery)
-2. [Processing semantics: overview](#processing-semantics-overview)
-   1. [At most once](#at-most-once-processing)
-   2. [At least once](#at-least-once-processing)
-   3. [Exactly once](#exactly-once-processing)
-3. [E2E delivery and processing](#e2e-delivery-and-processing)
-4. [Conclusion](#conclusion)
-
 # Delivery semantics: overview <a name="delivery-semantics-overview"></a>
 So, what exactly is `delivery semantics` and why this is important? `Delivery semantics` is about guarantees provided by messaging system or delivery protocol.
 These guarantees are about message order (delivery and processing), delivery reliability, duplication allowance and so on. In other words `delivery semantic` determines how exactly message will be handled in terms of delivery. 

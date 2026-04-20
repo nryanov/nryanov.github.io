@@ -12,18 +12,6 @@ tags:
 url: /kafka/kafka-connect-overview/
 ---
 
-# Table of contents
-1. [Kafka-connect: overview](#kafka-connect-overview)
-   1. [Connectors](#connectors)
-   2. [Tasks](#tasks)
-   3. [State](#state)
-   4. [Workers](#workers)
-   5. [Sources and Sinks](#sources-and-sinks)
-   6. [Converters](#converters)
-   7. [Transforms](#transforms)
-2. [Example](#example)
-3. [Conclusion](#conclusion)
-
 # Kafka-connect: overview <a name="kafka-connect-overview"></a>
 Imagine you have a task where you need to fetch some data from a database and incrementally store it in kafka or read the consumed data from kafka and store it in the database.
 You can solve both tasks using plain kafka consumer/producer API or even use kafka streams library, 

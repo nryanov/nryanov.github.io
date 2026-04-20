@@ -18,19 +18,6 @@ tags:
 url: /postgresql/debezium-postgres/
 ---
 
-# Table of contents
-1. [Introduction](#introduction)
-2. [CDC: Change Data Capture](#cdc)
-3. [How Postgres handle data changes?](#how-postgres-handle-data-changes)
-4. [Logical replication and WAL](#logical-replication-and-wal)
-5. [Debezium](#debezium)
-   1. [Database setup](#database-setup)
-   2. [Debezium-server](#debezium-server)
-   3. [Debezium-engine](#debezium-engine)
-   4. [Kafka-connect connector](#kafka-connect-connector)
-6. [Conclusion](#conclusion)
-
-# Introduction <a name="introduction"></a>
 In this little article I'll show different ways to set up debezium for log-based CDC.
 Before diving into details about debezium, I'll shortly describe CDC and why it may be helpful in some tasks. 
 

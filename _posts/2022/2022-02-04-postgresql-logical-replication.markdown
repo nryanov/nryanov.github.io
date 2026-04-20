@@ -14,21 +14,6 @@ tags:
 url: /postgresql/postgresql-logical-replication/
 ---
 
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Logical replication](#logical-replication)
-3. [Setup (asynchronous mode)](#async-setup)
-   1. [Publisher](#async-publisher)
-   2. [Subscriber](#async-subscriber)
-4. [Setup (synchronous mode)](#sync-setup)
-   1. [Publisher](#sync-publicher)
-   2. [Subscriber](#sync-subscriber)
-   3. [Sync mode](#sync-mode)
-5. [Conflict resolution](#conflict-resolution)
-6. [Replica identity](#replica-identity)
-7. [DDL](#ddl)
-8. [Conclusion](#conclusion)
-
 # Prerequisite <a name="prerequisite"></a>
 All examples assume that postgresql is already installed on your machine. 
 Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.

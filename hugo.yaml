@@ -96,3 +96,5 @@ params:
       url: "https://github.com/nryanov"
     - name: "linkedin"
       url: "https://linkedin.com/in/nryanov"
+    - name: "mail"
+      url: "ryanov.nikita@gmail.com"
