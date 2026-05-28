@@ -1,34 +1,33 @@
 ---
-layout: single
 title:  "PostgreSQL: Streaming Replication"
 date:   2022-02-10 22:50:00 +0300
-categories: postgresql replication database streaming-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - streaming-replication
+url: /postgresql/postgresql-streaming-replication/
 ---
 
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Streaming replication](#streaming-replication)
-3. [Setup](#setup)
-   1. [Primary server](#primary-server)
-   2. [Replica server](#replica)
-   3. [Sync mode](#sync-mode)
-4. [Standby promotion](#standby-promotion)
-5. [Conclusion](#conclusion)
-
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine.
-Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
+All examples assume that postgresql is already installed on your machine.
+Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Streaming replication <a name="streaming-replication"></a>
 Streaming replication is a built-in mechanism in PostgreSQL to replicate data between multiple servers.
 It is a low-level replication mechanism as it streams WAL data from primary server to the replica through the physical replication slot,
 so it is highly recommended to replicate data between servers using similar PostgreSQL major version (minor versions could be different).
-Also it is a good idea to have equal servers in terms of server configuration such as CPU, RAM and Disks, especially if you consider to promote replica to master if primary server goes down.
+Also, it is a good idea to have equal servers in terms of server configuration such as CPU, RAM and Disks, especially if you consider to promote replica to master if primary server goes down.
 
 If you need to replicate data between PostgreSQL servers which use different versions then consider Logical replication.
 
 # Setup <a name="setup"></a>
-To setup streaming replication we need at least two instances: one will be running as a primary server, another one as a replica.
+To set up streaming replication we need at least two instances: one will be running as a primary server, another one as a replica.
 
 ## Primary server <a name="primary server"></a>
 ```sh

@@ -1,0 +1,32 @@
+.admonition {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border-left: 0.3rem solid var(--primary);
+  border-radius: 0.25rem;
+  background: var(--code-bg);
+}
+
+.admonition p {
+  margin: 0.35rem 0;
+}
+
+.admonition-title {
+  font-weight: 700;
+  margin: 0 0 0.2rem;
+}
+
+.admonition-note {
+  border-left-color: #3b82f6;
+}
+
+.admonition-tip {
+  border-left-color: #10b981;
+}
+
+.admonition-warning {
+  border-left-color: #f59e0b;
+}
+
+.admonition-caution {
+  border-left-color: #ef4444;
+}

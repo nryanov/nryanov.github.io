@@ -1,0 +1,19 @@
+:root {
+  --custom-code-block-bg: #f8f8f8;
+  --custom-code-text: #1f2937;
+}
+
+:root[data-theme="dark"] {
+  --custom-code-block-bg: #2e2e33;
+  --custom-code-text: #c4c4c5;
+}
+
+.md-content .highlight:not(table),
+.md-content pre code,
+.post-content .highlight pre {
+  background: var(--custom-code-block-bg) !important;
+}
+
+.md-content pre code {
+  color: var(--custom-code-text) !important;
+}

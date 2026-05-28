@@ -1,28 +1,22 @@
 ---
-layout: single
 title:  "PostgreSQL: Logical Replication"
 date:   2022-02-04 22:50:00 +0300
-categories: postgresql replication database logical-replication
+categories:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+tags:
+  - postgresql
+  - replication
+  - database
+  - logical-replication
+url: /postgresql/postgresql-logical-replication/
 ---
 
-# Table of contents
-1. [Prerequisite](#prerequisite)
-2. [Logical replication](#logical-replication)
-3. [Setup (asynchronous mode)](#async-setup)
-   1. [Publisher](#async-publisher)
-   2. [Subscriber](#async-subscriber)
-4. [Setup (synchronous mode)](#sync-setup)
-   1. [Publisher](#sync-publicher)
-   2. [Subscriber](#sync-subscriber)
-   3. [Sync mode](#sync-mode)
-5. [Conflict resolution](#conflict-resolution)
-6. [Replica identity](#replica-identity)
-7. [DDL](#ddl)
-8. [Conclusion](#conclusion)
-
 # Prerequisite <a name="prerequisite"></a>
-All examples assumes that postgresql is already installed on your machine. 
-Also all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
+All examples assume that postgresql is already installed on your machine. 
+Also, all examples are created using `PostgreSQL 14.1 on aarch64-apple-darwin20.6.0, compiled by Apple clang version 13.0.0 (clang-1300.0.29.3), 64-bit`.
 
 # Logical replication <a name="logical-replication"></a>
 Logical replication is another method to replicate data between multiple nodes. This replication uses publish-subscribe model. 
@@ -265,7 +259,7 @@ Also replica's subscription will be stopped:
 SELECT * FROM pg_stat_replication;
 ```
 
-And in logs you can found something like that:
+And in logs you should find something like that:
 ```text
 2022-02-03 22:17:28.008 [3828] ERROR:  duplicate key value violates unique constraint "t1_pkey"
 2022-02-03 22:17:28.008 [3828] DETAIL:  Key (id)=(11) already exists.

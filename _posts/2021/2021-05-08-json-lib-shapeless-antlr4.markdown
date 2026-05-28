@@ -1,8 +1,17 @@
 ---
-layout: single
 title:  "How to create a small json lib using antlr and shapeless"
 date:   2021-05-08 22:17:26 +0300
-categories: scala shapeless derivation antlr
+categories:
+  - scala
+  - shapeless
+  - derivation
+  - antlr
+tags:
+  - scala
+  - shapeless
+  - derivation
+  - antlr
+url: /scala/json-lib-shapeless-antlr4/
 ---
 In this article i will show how antlr4 and shapeless can be used to create a small json library (not for production, of course ^_^)
 with ability to decode arbitrary json strings into case classes and encode them back with some scala magic.
