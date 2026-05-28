@@ -15,27 +15,27 @@ tags:
 url: /postgresql/debezium-production-issues/
 ---
 
-In this article I want to share problems which I faced while running Debezium in production with PostgreSQL, and solutions where they exist.
+In this article I want to share problems I faced while running Debezium in production with PostgreSQL, and solutions where they exist.
 This material is based on a talk I gave at SmartData 2025. I assume that you already know what CDC is and how Debezium works in general — if not, start with [PostgreSQL: Log-based CDC using debezium](/postgresql/debezium-postgres/) and [Kafka-connect: overview](/kafka/kafka-connect-overview/).
 
 All examples below were tested with PostgreSQL 15, 16 and 17. If a version is not mentioned explicitly, PostgreSQL 17 is assumed.
-Examples are implemented using a runtime wrapper around Debezium Engine, but the same problems and solutions apply to Kafka Connect connector, Debezium Server and other deployment options.
+Examples are implemented using a runtime wrapper around Debezium Engine, but the same problems and solutions apply to the Kafka Connect connector, Debezium Server, and other deployment options.
 
 # Typical architecture <a name="typical-architecture"></a>
 
-Before diving into problems, let's briefly look at a typical setup which was used in most examples.
+Before diving into problems, let's briefly look at the typical setup used in most examples.
 
 ![Typical Debezium architecture with PostgreSQL in Kubernetes](/assets/images/2026/debezium-production-issues/typical-architecture.png)
 
 In production we usually have a PostgreSQL cluster.
 Debezium connects to the leader node using logical replication and streams changes to a sink — Kafka, S3 or anything else.
-Physical replication between leader and replicas is shown for context: Debezium reads the WAL from the leader, not from replicas (with one exception which we'll discuss later).
+Physical replication between leader and replicas is shown for context: Debezium reads the WAL from the leader, not from replicas (with one exception that we'll discuss later).
 
 Code samples for all environments mentioned in this article can be found in the [presentations repository](https://github.com/nryanov/presentations/tree/main/smartdata/cdc-via-debezium/code-samples/postgres-debezium).
 
 # Initial setup <a name="initial-setup"></a>
 
-Most problems start from replication configuration, so let's define initial conditions which were used in examples.
+Most problems start from replication configuration, so let's define the initial conditions used in the examples.
 
 ```sql
 CREATE TABLE debezium_offsets
@@ -62,7 +62,7 @@ ALTER PUBLICATION debezium_publication ADD TABLE public.data;
 The setup consists of three parts:
 
 1. **Offset storage table** — in these examples offsets are stored in PostgreSQL itself using JDBC offset backing store, not in Kafka topics.
-2. **Data table** — a simple table which we want to replicate.
+2. **Data table** — a simple table that we want to replicate.
 3. **Logical replication slot and publication** — created manually before starting Debezium.
 
 More details about WAL, logical replication and Debezium setup options can be found in [the article about logical replication in postgres](/postgresql/postgresql-logical-replication/) and [debezium-postgres](/postgresql/debezium-postgres/).
@@ -80,7 +80,7 @@ The first group of problems is related to initial snapshots — getting the curr
 ## Adding new tables to an existing connector <a name="initial-snapshot-new-tables"></a>
 
 **Problem:** you need to change the list of replicated tables and get the initial state of newly added tables.
-With `snapshot.mode=INITIAL` snapshots are not triggered for tables which were added after the connector started.
+With `snapshot.mode=INITIAL`, snapshots are not triggered for tables that were added after the connector started.
 
 **Solution:** one option is to create a new replication slot and publication alongside the existing one and start a new connector instance.
 Another option is to use `snapshot.mode=INITIAL_ALWAYS`, add a table to the publication and restart the connector:
@@ -101,14 +101,14 @@ Instead, manage snapshots manually for a specific subset of tables using ad-hoc 
 # Ad-hoc snapshots <a name="ad-hoc-snapshots"></a>
 
 Ad-hoc snapshots allow you to trigger a snapshot on demand without recreating the connector or restarting it for all tables.
-This feature is especially useful not only for adding new tables, but also for fixing (e.g. lost update) existing ones. 
+This feature is especially useful not only for adding new tables, but also for repairing existing ones (for example, after a lost update).
 
 ## Manual snapshot control <a name="ad-hoc-manual-control"></a>
 
 **Problem:** you need to control when snapshots run, so that newly added tables can get their initial state without affecting the rest.
 
 **Solution:** set `snapshot.mode=INITIAL` or `snapshot.mode=NO_DATA` and use [Debezium signals](https://debezium.io/documentation/reference/stable/configuration/signalling.html).
-Signals can be sent via Kafka topic, JMX, `source` channel (a table in the database) or a custom channel.
+Signals can be sent via a Kafka topic, JMX, the `source` channel (a table in the database), or a custom channel.
 In production the `source` channel is often the most convenient option. You can also combine them and set multiple channels.
 
 Minimal connector configuration for `source` channel type:
@@ -185,7 +185,7 @@ Debezium splits the table into chunks ordered by primary key:
 Chunk size can be tuned with `incremental.snapshot.chunk.size`.
 
 > [!WARNING]
-> Incremental snapshot working only with `source` channel
+> Incremental snapshots work only with the `source` channel.
 
 ## Incremental snapshot without a primary key <a name="ad-hoc-incremental-no-pk"></a>
 
@@ -210,7 +210,7 @@ VALUES (
 - implement custom snapshot logic tailored to your data layout
 - use another tool for initial load (for example, Apache Flink CDC) and switch to Debezium for streaming afterwards
 
-Debezium for the time being support parallel table snapshotting but snapshot of each table will be taken in a non-parallel way. 
+For now, Debezium supports parallel snapshotting across tables, but each individual table snapshot still runs serially.
 
 ## Signal sent but snapshot does not start <a name="ad-hoc-signal-no-effect"></a>
 
@@ -224,7 +224,7 @@ Debezium for the time being support parallel table snapshotting but snapshot of 
 
 **Problem:** incremental snapshot fails because table schema is not available yet.
 
-**Solutions:** this is a bug and it has multiple solutions
+**Solutions:** this is a known bug with several workarounds:
 - trigger any change on the target table before sending the signal
 - upgrade Debezium to a version newer than 3.1.2
 - run a BLOCKING snapshot with a filter and `LIMIT 0` to force schema registration:
@@ -270,12 +270,13 @@ CREATE TABLE heartbeat
 ALTER PUBLICATION debezium_publication ADD TABLE public.heartbeat;
 ```
 
-A background job (or cron) should run query to update your heartbeat table:
+A background job (or cron) should run a query to update the heartbeat table:
 
 ```sql
 UPDATE heartbeat SET last_update = now() WHERE single_row IS TRUE;
 ```
-Debezium may also handle it. To configure query for heartbeat table and other stuff use this properties:
+Debezium can also handle it. To configure the heartbeat query and related options, use these properties:
+
 ```properties
 heartbeat.interval.ms=5000
 heartbeat.action.query={your custom query}
@@ -283,7 +284,7 @@ heartbeat.action.query={your custom query}
 
 ## Avoiding read-only mode when disk is full <a name="reliability-read-only"></a>
 
-**Problem:** replication was down for a long time, WAL consumed all free disk space and the database switched to read-only mode.
+**Problem:** replication was down for a long time, WAL growth consumed all free disk space, and the database switched to read-only mode.
 
 **Solution:** configure `max_slot_wal_keep_size` to limit how much WAL a replication slot is allowed to retain.
 Keep in mind the trade-off: if the consumer falls too far behind, the slot may become invalid, and you will need to re-snapshot affected tables.
@@ -319,21 +320,24 @@ The difference is your business-level replication lag.
 ![Business replication lag using heartbeat](/assets/images/2026/debezium-production-issues/business-lag-heartbeat.png)
 
 # Data repair
+
 ## Deduplication of CDC events
-**Problem:** Default semantic `at-least-once` is not enough, and you need `exactly-once` (or more correctly `at-least-once` with deduplication).
 
-**Solution:** Basically you can use some business key from event if any, but if events don't have such a key, then LSN can be used which every record has.
+**Problem:** The default `at-least-once` semantics are not enough, and you need `exactly-once` delivery (or, more precisely, `at-least-once` with deduplication).
 
-More info about [LSN](https://postgrespro.ru/docs/postgrespro/current/datatype-pg-lsn)
+**Solution:** You can use a business key from the event when one exists; otherwise, use the LSN, which every record includes.
+
+More information about [LSN](https://postgrespro.ru/docs/postgrespro/current/datatype-pg-lsn):
 
 > [!WARNING]
-> The only exclusion about LSN is incremental snapshots. During incremental snapshot events will not have a unique LSN value, but instead will have null as LSN. 
+> The only exception regarding LSN is incremental snapshots: during an incremental snapshot, events do not have a unique LSN; instead, the LSN is null.
 
 ## Data recovery after replication gaps
-**Problem:** Because of incident some INSERT/UPDATE events were lost. Table(s) is very large to full snapshot, and you want to minimize recovery time. 
 
-**Solution:** If there is a knowledge about concrete time range (or even concrete records by ID) which UPDATE/INSERT events were lost, you can snapshot them using filters.
-Some example for **blocking** and **incremental** snapshots:
+**Problem:** Because of an incident, some INSERT/UPDATE events were lost. The table(s) are too large for a full snapshot, and you want to minimize recovery time.
+
+**Solution:** If you know the concrete time range (or even specific record IDs) during which UPDATE/INSERT events were lost, you can snapshot them using filters.
+Examples for **blocking** and **incremental** snapshots:
 ```sql
 INSERT INTO signals(id, type, data)
 VALUES (
@@ -351,33 +355,34 @@ VALUES (
 ```
 
 > [!NOTE]
-> For incremental snapshot in filter field only `WHERE` condition is placed, while for blocking -- the whole query.
+> For incremental snapshots, the filter field contains only the `WHERE` condition; for blocking snapshots, it contains the full query.
 
 ## Lost DELETE events
-**Problem:** Because of incident some DELETE events were lost. In this case filtered snapshots can't help.
 
-**Solution:** In this case snapshot is required, but can be done in the different ways:
-- Snapshot with data removing in the target system to avoid duplicate records. The disadvantage of this solution is that you'll lose all saved history
-- Snapshot with new epoch_id. In this case you don't need to clean up target system, buy you have to customize a little bit logic  of replication and add additional system field which will indicate epoch for each row. After snapshot you can create a full diff between X+1 and X, where X -- epoch_id.
+**Problem:** Because of an incident, some DELETE events were lost. In this case, filtered snapshots cannot help.
+
+**Solution:** A snapshot is still required, but it can be done in different ways:
+- Snapshot with data removal in the target system to avoid duplicate records. The disadvantage of this approach is that you lose all saved history.
+- Snapshot with a new `epoch_id`. In this case you do not need to clean up the target system, but you must customize replication logic slightly and add a system field that indicates the epoch for each row. After the snapshot, you can build a full diff between epoch X+1 and epoch X.
 
 # Non-standard table replication
 
 ## Tables without a primary key
-**Problem:** Logical replication expects that each table have something which can be used to uniquely identify records from this table. But in reality not all tables have PK or even unique field. 
+**Problem:** Logical replication expects each table to have something that can uniquely identify its rows, but in practice not all tables have a primary key or even a unique column.
 
-**Solution:** For tables without PK/unique fields you have to change replica identity:
+**Solution:** For tables without a PK or unique column, change the replica identity:
 ```sql
 ALTER TABLE table_name REPLICA IDENTITY FULL;
 ```
 
-With `FULL` replica identity the whole row will be used as identifier. It's enough for replication, but keep in mind that it also will add additional overhead on WAL.
-The same technique with `FULL` replica identity can be used to replicate tables with:
+With `FULL` replica identity, the whole row is used as the identifier. That is enough for replication, but keep in mind that it also adds extra WAL overhead.
+The same `FULL` replica identity technique can be used for tables with:
 - TOAST columns
-- If you need to create a diff between `before` and `after`. Using `FULL` replica identity each event will have not null `before` section
+- A need to diff `before` and `after`: with `FULL` replica identity, each event has a non-null `before` section
 
 ## Partitioned tables
-In some cases when you need to replicate partitioned table you want to be sure that for each event `table` will be not `table_pX`, but exactly `table`.
-To achieve it `publish_via_partition_root` should be set to `true` in publication.
+When replicating a partitioned table, you may want the `table` field in each event to be the parent table name, not `table_pX`.
+To achieve that, set `publish_via_partition_root` to `true` on the publication.
 ```json
 // publish_via_partition_root=false
 {"before":  {}, "after": {}, "source":  {"schema":  "schema", "table":  "table_prt_1"}}
@@ -386,9 +391,9 @@ To achieve it `publish_via_partition_root` should be set to `true` in publicatio
 ```
 
 ## TimescaleDB hypertables
-**Problem:** You need to replicate hypertable from TimescalDB extension. Standard ways of replication may not handle such table correctly because hypertable use different partitioning logic.
+**Problem:** You need to replicate a hypertable from the TimescaleDB extension. Standard replication approaches may not handle such tables correctly because hypertables use different partitioning logic.
 
-**Solution:** Publication should be adapted to replicate the whole `_timescaldb_internal` schema to handle shards and additional transform should be set up for debezium:
+**Solution:** Adapt the publication to replicate the whole `_timescaledb_internal` schema to handle shards, and configure an additional transform for Debezium:
 ```properties
 transforms=timescaledb
 transforms.timescaledb.type=io.debezium.connector.postgresql.transforms.timescaledb.TimescaleDb
@@ -399,28 +404,26 @@ transforms.timescaledb.database.password=postgres
 transforms.timescaledb.database.dbname=postgres
 ```
 
-This transform also require connection settings because it handles shard metadata by itself.
-Publication for such cases should be created like this:
+This transform also requires connection settings because it handles shard metadata itself.
+Create the publication like this:
 ```sql
-CREATE PUBLICATION {publication-name} FOR TABLES IN SCHEMA timescaldb_internal
+CREATE PUBLICATION {publication-name} FOR TABLES IN SCHEMA _timescaledb_internal
 ```
 
-After this you'll get events from each shard of root hypertable.
+After that, you will receive events from each shard of the root hypertable.
 
 # Advanced replication
 ## Replication with transaction metadata
-**Problem:** There is a task to replicate data strictly by transaction boundaries. For example, if table A was updated in source then in target system this table also should be updated in the same way in one shot.
+**Problem:** You need to replicate data strictly along transaction boundaries. For example, if table A is updated in the source within one transaction, the target should apply those changes as a single unit.
 
-**Solution:** Debezium can provide additional metadata about transaction boundaries of each event via `provide.transaction.metadata=true`
+**Solution:** Debezium can attach transaction-boundary metadata to each event via `provide.transaction.metadata=true`:
 
-![Business replication lag using heartbeat](/assets/images/2026/debezium-production-issues/transaction-metadata.png)
+![Transaction metadata in Debezium events](/assets/images/2026/debezium-production-issues/transaction-metadata.png)
 
-Also, there will be two additional events: `BEGIN` and `END` which will indicate transaction start and end.
+You will also receive two additional event types, `BEGIN` and `END`, marking the start and end of a transaction.
 
 ## Schema evolution in general
-Using debezium you can replicate data using avro format and saving schema in external schema-registry. One of the biggest issues in this setup is that
-if replicated table was altered in non-compatible way. There are at least seven compatibility types (`NONE`, `BACKWARD`, `FORWARD`, `FULL`, `BACKWARD-TRANSITIVE`, `FORWARD-TRANSITIVE`, `FULL-TRANSITIVE`), but in this example
-I'll consider only `BACKWARD`.
+With Debezium you can replicate data in Avro format and store schemas in an external schema registry. One of the biggest issues in this setup arises when a replicated table is altered in a non-compatible way. Schema registries support at least seven compatibility modes (`NONE`, `BACKWARD`, `FORWARD`, `FULL`, `BACKWARD-TRANSITIVE`, `FORWARD-TRANSITIVE`, `FULL-TRANSITIVE`), but in this example I consider only `BACKWARD`.
 
 Imagine there is a table:
 ```sql
@@ -432,17 +435,17 @@ CREATE TABLE data(
 )
 ```
 
-For `BACKWARD` compatible change only the enxt changes are valid:
-- Add new optional field (nullable field with default)
-- Removing field (required/optional)
-- Change field type: int -> long, float -> double
+For a `BACKWARD`-compatible change, only the following changes are valid:
+- Add a new optional field (nullable, with a default)
+- Remove a field (required or optional)
+- Change a field type: int → long, float → double
 
-If someone, for example, add new required field which is OK in PostgreSQL, then new avro schema will be created which is not compatible with the previous one.
-The bad news is that debezium will stop replication, and it may lead to data lose, because slot will be lost after some time.
+If someone adds a new required field, which PostgreSQL allows, a new Avro schema is created that is not compatible with the previous one.
+Debezium will then stop replication, which can lead to data loss because the slot may be invalidated after some time.
 
-Fully avoid it is probably impossible but at least you can minimize negative outcome:
-- Change subject compatibility level to `NONE` in schema-registry. In this case even for non-compatible change schema-registry will allow to save new schema and replication will continue. But the problem will be just shifted `to the right`.
-- Introduce data contracts. This is mostly organizational change, not technical, but it will help to handle such changes and avoid non-compatible updates.
+Fully avoiding this is probably impossible, but you can at least reduce the impact:
+- Set subject compatibility to `NONE` in the schema registry. Then even a non-compatible change is accepted, replication continues, but the problem is merely deferred downstream.
+- Introduce data contracts. This is mostly an organizational change, not a technical one, but it helps coordinate schema changes and avoid incompatible updates.
 
 # Conclusion <a name="conclusion"></a>
 
